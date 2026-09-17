@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+  <meta name="description" content="今天我要吃什么——为午饭和晚饭随机挑选美食" />
+  <title>今天我要吃什么？</title>
+  <style>
+    :root { --ink:#315443; --muted:#71917e; --deep:#4c8c68; --leaf:#75b986; --mint:#e4f4e7; --cream:#fffdf4; --peach:#ffe3bf; --pink:#ffd8d0; --line:#cde3d2; --shadow:0 15px 35px rgba(57,113,76,.12); }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; overflow-x:hidden; -webkit-text-size-adjust:100%; color:var(--ink); font-family:KaiTi, STKaiti, "楷体", serif; background:radial-gradient(circle at 9% 7%,#fff8d9 0 5%,transparent 23%),radial-gradient(circle at 88% 15%,#d7f1df 0 8%,transparent 28%),var(--cream); }
+    button,input,select { font:inherit; }
+    .wrap { width:min(940px, calc(100% - 32px)); margin:auto; padding:44px 0 54px; }
+    header { text-align:center; margin-bottom:28px; }
+    .kicker { display:inline-block; padding:6px 14px; background:#fff0b7; border-radius:99px; color:#846826; font-size:.92rem; }
+    h1 { margin:12px 0 5px; font-size:clamp(2.25rem,6vw,4rem); letter-spacing:.07em; color:#356748; }
+    header p { margin:0; color:var(--muted); font-size:1.08rem; }
+    .panel { background:rgba(255,255,255,.78); border:1px solid rgba(205,227,210,.8); border-radius:26px; padding:25px; box-shadow:var(--shadow); backdrop-filter:blur(4px); }
+    .choices { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+    .field-title { display:flex; align-items:center; gap:8px; margin:0 0 10px; font-size:1.15rem; font-weight:bold; }
+    .field-title span { font-size:1.25rem; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip { border:1px solid var(--line); padding:7px 12px; border-radius:99px; color:var(--ink); background:#fff; cursor:pointer; transition:.18s; }
+    .chip:hover { transform:translateY(-1px); border-color:var(--leaf); }
+    .chip.active { color:#fff; background:var(--deep); border-color:var(--deep); box-shadow:0 5px 12px rgba(76,140,104,.2); }
+    .main-btn { display:block; border:0; margin:24px auto 0; border-radius:99px; padding:14px 34px; min-width:225px; background:linear-gradient(135deg,#63aa74,#3d8962); color:#fff; box-shadow:0 9px 20px rgba(60,130,91,.28); font-size:1.28rem; cursor:pointer; transition:.2s; }
+    .main-btn:hover { transform:translateY(-2px) scale(1.02); }
+    .main-btn:active { transform:translateY(1px); }
+    .results { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:22px; }
+    .results.with-drink { grid-template-columns:1fr 1fr; }
+    .result { text-align:center; min-height:204px; display:flex; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+    #drinkResult { display:flex; }
+    #drinkResult.show { display:flex; }
+    .result::after { content:"✦  ·  ✦"; position:absolute; color:#add7b5; font-size:1.4rem; bottom:18px; left:50%; transform:translateX(-50%); letter-spacing:16px; }
+    .result .empty { color:var(--muted); font-size:1.12rem; }
+    .food-icon { font-size:2.5rem; line-height:1; }
+    .food-name { margin:6px 0 4px; color:#286143; font-size:clamp(1.85rem,5vw,2.65rem); font-weight:bold; }
+    .food-type { display:inline-block; padding:4px 12px; border-radius:99px; background:#e8f5e9; color:#508363; }
+    .food-reason { margin:10px auto 18px; color:var(--muted); font-size:1.06rem; }
+    .result.pop .food-icon,.result.pop .food-name { animation:pop .38s ease-out both; }
+    @keyframes pop { 0%{opacity:0;transform:scale(.6) rotate(-6deg)} 72%{transform:scale(1.1) rotate(2deg)} 100%{opacity:1;transform:scale(1)} }
+    .notice { min-height:22px; margin:10px 0 0; text-align:center; color:#b46755; }
+    .extras { display:flex; justify-content:center; gap:12px; margin-top:17px; }
+    .text-btn { border:0; background:transparent; color:var(--deep); text-decoration:underline; cursor:pointer; font-size:1rem; }
+    dialog { width:min(570px,calc(100% - 28px)); border:1px solid var(--line); border-radius:22px; padding:0; color:var(--ink); box-shadow:0 20px 60px rgba(28,67,43,.25); }
+    dialog::backdrop { background:rgba(39,75,52,.28); backdrop-filter:blur(3px); }
+    .dialog-inner { padding:25px; background:var(--cream); }
+    .dialog-inner h2 { margin:0 0 4px; font-size:1.55rem; }
+    .dialog-inner p { margin:0 0 17px; color:var(--muted); }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+    label { display:block; color:var(--muted); }
+    input,select { width:100%; margin-top:5px; border:1px solid var(--line); border-radius:10px; padding:9px 10px; color:var(--ink); background:#fff; }
+    .dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:19px; }
+    .secondary { border:1px solid var(--line); padding:8px 15px; border-radius:10px; color:var(--ink); background:#fff; cursor:pointer; }
+    .save { border:0; padding:8px 15px; border-radius:10px; color:#fff; background:var(--deep); cursor:pointer; }
+    .personal-list { max-height:180px; overflow:auto; margin-top:16px; }
+    .personal-item { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-top:1px dashed var(--line); }
+    .personal-item button { border:0; background:transparent; color:#b46755; cursor:pointer; }
+    footer { text-align:center; color:var(--muted); margin-top:23px; font-size:.96rem; }
+
+    /* === 抽签动画 === */
+    .result.rolling .food-icon { animation:roll .12s linear infinite; }
+    .result.rolling .food-name { opacity:.5; }
+    @keyframes roll { 0%{transform:translateY(-4px) rotate(-3deg)} 50%{transform:translateY(4px) rotate(3deg)} 100%{transform:translateY(-4px) rotate(-3deg)} }
+    .result-actions { display:flex; gap:10px; justify-content:center; margin-top:14px; position:relative; z-index:2; flex-wrap:wrap; }
+    .mini-btn { border:1px solid var(--line); background:#fff; color:var(--deep); border-radius:99px; padding:5px 14px; font-size:.92rem; cursor:pointer; transition:.15s; font-family:inherit; }
+    .mini-btn:hover { background:var(--mint); border-color:var(--leaf); }
+    .mini-btn.primary { background:var(--deep); color:#fff; border-color:var(--deep); }
+    .mini-btn.primary:hover { background:var(--leaf); }
+    .history-list { max-height:340px; overflow:auto; }
+    .history-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px dashed var(--line); }
+    .history-item .hi-icon { font-size:1.5rem; }
+    .history-item .hi-main { flex:1; }
+    .history-item .hi-name { font-weight:bold; color:#286143; }
+    .history-item .hi-meta { font-size:.88rem; color:var(--muted); }
+    .history-item .hi-time { font-size:.82rem; color:var(--muted); white-space:nowrap; }
+    
+
+    /* === 饮品偏好栏 === */
+    .drink-avoids { display:flex; align-items:center; gap:8px; justify-content:center; flex-wrap:wrap; margin:0 0 18px; }
+    .drink-avoids .da-label { color:var(--muted); font-size:.98rem; }
+    .drink-avoids .chip { padding:5px 11px; font-size:.9rem; }
+    .drink-avoids .chip.active { background:linear-gradient(135deg,#e89aa4,#c97883); border-color:#c97883; box-shadow:0 5px 12px rgba(201,120,131,.2); }
+    /* === 抽签按钮行 === */
+    .draw-btns { display:flex; gap:16px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin:22px auto 0; }
+    .draw-btns .main-btn { margin:0; }
+    .draw-drink-wrap { display:flex; flex-direction:column; align-items:center; gap:0; }
+    /* drink-main-btn 用粉绿配色 */
+    .drink-main-btn { background:linear-gradient(135deg,#7ec8a8,#4a8c68); box-shadow:0 9px 20px rgba(74,140,104,.25); }
+    .drink-main-btn:hover { background:linear-gradient(135deg,#98d9bb,#5ea07a); }
+    
+    .with-drink-row { text-align:center; margin-top:14px; }
+    .with-drink-row label { color:var(--muted); font-size:1rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+    .with-drink-row input { width:auto; margin:0; accent-color:var(--deep); }
+    /* ====== 响应式适配 ====== */
+    @media (max-width:640px) {
+      html { font-size:15px; -webkit-tap-highlight-color:transparent; }
+      body { background-attachment:fixed; }
+      .wrap { width:100%; padding:18px 14px 36px; box-sizing:border-box; }
+      header { margin-bottom:20px; }
+      header p { font-size:.98rem; padding:0 6px; }
+      h1 { font-size:2.1rem !important; letter-spacing:.04em; margin:10px 0 6px; }
+      .kicker { font-size:.82rem; padding:5px 12px; }
+      .panel { padding:16px 14px; border-radius:20px; }
+      .choices { grid-template-columns:1fr; gap:14px; }
+      .field-title { font-size:1.05rem; margin-bottom:8px; }
+      .chips { gap:7px; }
+      .chip { padding:8px 13px; font-size:.95rem; min-height:36px; display:inline-flex; align-items:center; }
+      .main-btn { padding:14px 28px; font-size:1.18rem; min-width:0; width:100%; max-width:320px; min-height:52px; touch-action:manipulation; }
+      .drink-main-btn { width:100%; max-width:320px; }
+      .draw-btns { flex-direction:column; gap:12px; align-items:center; margin-top:18px; }
+      .draw-btns .main-btn { width:100%; max-width:320px; }
+      .draw-drink-wrap { width:100%; display:flex; flex-direction:column; align-items:center; gap:0; }
+      .with-drink-row { margin-top:12px; }
+      .with-drink-row label { font-size:.95rem; }
+      .drink-avoids { gap:7px; margin-bottom:14px; }
+      .drink-avoids .chip { padding:7px 12px; min-height:36px; }
+      .da-label { font-size:.92rem; width:100%; text-align:center; margin-bottom:2px; }
+      .results { grid-template-columns:1fr; gap:12px; margin-top:16px; }
+      .result { min-height:180px; padding:20px 14px; }
+      .result::after { font-size:1.2rem; letter-spacing:12px; bottom:12px; }
+      .food-icon { font-size:2.2rem; }
+      .food-name { font-size:1.75rem !important; }
+      .food-type { font-size:.88rem; padding:3px 10px; }
+      .food-reason { font-size:.98rem; padding:0 8px; }
+      .result-actions { gap:8px; margin-top:10px; }
+      .mini-btn { padding:7px 14px; font-size:.88rem; min-height:34px; }
+      .form-grid { grid-template-columns:1fr; gap:10px; }
+      input,select { padding:10px; font-size:1rem; min-height:42px; }
+      dialog { width:calc(100% - 20px); border-radius:18px; }
+      .dialog-inner { padding:18px; }
+      .dialog-actions { flex-direction:row; gap:8px; }
+      .extras { gap:14px; flex-wrap:wrap; margin-top:14px; }
+      .text-btn { font-size:.95rem; padding:8px 4px; min-height:36px; }
+      .notice { font-size:.92rem; min-height:20px; }
+      footer { font-size:.88rem; margin-top:18px; padding:0 10px; }
+      .history-item { padding:8px 0; }
+      .hi-name { font-size:.98rem; }
+      .hi-meta { font-size:.82rem; }
+      .hi-time { font-size:.78rem; }
+    }
+    @media (max-width:380px) {
+      html { font-size:14px; }
+      h1 { font-size:1.85rem !important; }
+      .main-btn { padding:13px 20px; font-size:1.1rem; min-height:48px; }
+      .chip { padding:7px 11px; font-size:.9rem; }
+      .wrap { padding:14px 10px 28px; }
+      .panel { padding:14px 11px; border-radius:16px; }
+      .result { min-height:160px; padding:16px 10px; }
+      .food-icon { font-size:2rem; }
+      .food-name { font-size:1.55rem !important; }
+    }
+    /* 触摸优化：所有可点击元素最小触控尺寸 */
+    @media (pointer:coarse) {
+      button, .chip, .text-btn, .mini-btn, input[type="checkbox"] { min-height:36px; min-width:36px; }
+      input[type="checkbox"] { width:20px; height:20px; transform:scale(1.2); margin-right:4px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="kicker">吃什么，听天由命吧！</div>
+      <h1>今天我要吃什么？</h1>
+      <p>可以先选偏好与忌口，也可以完全随机...</p>
+    </header>
+    <section class="panel" aria-label="用餐偏好">
+      <div class="choices">
+        <div>
+          <p class="field-title"><span>💚</span>今天更想吃</p>
+          <div class="chips" id="likes">
+            <button class="chip" data-tag="米饭">米饭</button><button class="chip" data-tag="面食">面食</button><button class="chip" data-tag="粉">粉</button><button class="chip" data-tag="麻辣">麻辣/香锅</button><button class="chip" data-tag="轻食">轻食/沙拉</button><button class="chip" data-tag="西式">西式/快餐</button><button class="chip" data-tag="其他">火锅/烧烤</button>
+            <button class="chip" data-tag="鸡肉">鸡肉</button><button class="chip" data-tag="牛肉">牛肉</button><button class="chip" data-tag="猪肉">猪肉</button><button class="chip" data-tag="海鲜">鱼/海鲜</button><button class="chip" data-tag="鸡蛋">鸡蛋</button><button class="chip" data-tag="菌菇">菌菇</button><button class="chip" data-tag="番茄">番茄</button><button class="chip" data-tag="豆腐">豆腐</button><button class="chip" data-tag="素食">素食</button>
+          </div>
+        </div>
+        <div>
+          <p class="field-title"><span>🌿</span>今天不想碰</p>
+          <div class="chips" id="avoids">
+            <button class="chip" data-tag="辣">辣</button><button class="chip" data-tag="香菜">香菜</button><button class="chip" data-tag="葱">葱</button><button class="chip" data-tag="姜">姜</button><button class="chip" data-tag="蒜">蒜</button><button class="chip" data-tag="酸">酸</button>
+            <button class="chip" data-tag="牛肉">牛肉</button><button class="chip" data-tag="羊肉">羊肉</button><button class="chip" data-tag="海鲜">海鲜</button><button class="chip" data-tag="内脏">内脏</button><button class="chip" data-tag="猪肉">猪肉</button><button class="chip" data-tag="花生">花生</button><button class="chip" data-tag="乳制品">乳制品</button><button class="chip" data-tag="鸡蛋">鸡蛋</button>
+            <button class="chip" data-tag="只吃素">全素</button>
+          </div>
+        </div>
+      </div>
+      <div class="drink-avoids" id="drinkAvoids">
+        <span class="da-label">🥤 饮品偏好：</span>
+        <button class="chip" data-dtag="咖啡因">不含咖啡因</button>
+        <button class="chip" data-dtag="茶底">不要茶底</button>
+      </div>
+      <div class="draw-btns">
+        <button type="button" class="main-btn" id="draw">看看吃啥 🍚</button>
+        <div class="draw-drink-wrap">
+          <button type="button" class="main-btn drink-main-btn" id="drawDrink">抽杯饮品 🥤</button>
+        </div>
+      </div>
+      <div class="with-drink-row"><label><input type="checkbox" id="withDrink" /> 同时抽饮品</label></div>
+      <p class="notice" id="notice" role="alert"></p>
+    </section>
+    <section class="results" id="results" aria-live="polite">
+      <div class="panel result" id="result">
+        <div class="empty">🎲 点击上方绿色按钮，抽取你的天命食物</div>
+      </div>
+      <div class="panel result" id="drinkResult">
+        <div class="empty">🥤 勾选"同时抽取饮品"，或点粉色按钮单独抽</div>
+      </div>
+    </section>
+    <div class="extras"><button class="text-btn" id="manage">＋ 管理我的菜单</button><button class="text-btn" id="historyBtn">🕐 最近记录</button><button class="text-btn" id="reset">清空本次选择</button></div>
+    <footer>内置 550+ 道餐食 · 300+ 款主流奶茶咖啡 · 自定义菜单保存在本机</footer>
+  </main>
+  <dialog id="menuDialog">
+    <form method="dialog" class="dialog-inner" id="dishForm">
+      <h2>我的菜单</h2><p>加上你常去店里的招牌菜，下一次就可能抽到它。</p>
+      <div class="form-grid">
+        <label>食物名称<input required id="dishName" placeholder="例如：阿姨家的土豆牛腩饭" /></label>
+        <label>类别<select id="dishType"><option>米饭</option><option>面食</option><option>粉</option><option>麻辣</option><option>轻食</option><option>西式</option><option>其他</option></select></label>
+        <label>包含标签<input id="dishTags" placeholder="用逗号隔开，如 牛肉,辣" /></label>
+        <label>推荐理由<input id="dishReason" placeholder="例如：香香的，分量足" /></label>
+      </div>
+      <div class="dialog-actions"><button class="secondary" type="button" id="closeDialog">关闭</button><button class="save" type="submit">加入菜单</button></div>
+      <div class="personal-list" id="personalList"></div>
+    </form>
+  </dialog>
+  <dialog id="historyDialog">
+    <div class="dialog-inner">
+      <h2>最近吃了啥</h2>
+      <p>最近 10 次抽签结果，帮你回忆一下。</p>
+      <div class="history-list" id="historyList"><p style="color:var(--muted)">还没有记录。</p></div>
+      <div class="dialog-actions"><button class="secondary" type="button" id="closeHistory">关闭</button><button class="secondary" type="button" id="clearHistory" style="color:#b46755">清空记录</button></div>
+    </div>
+  </dialog>  <script>
+    const baseFoods = [{"name":"黄焖鸡米饭","type":"米饭","tags":["鸡肉","辣"],"reason":"酱香浓郁又下饭，午饭吃很踏实。","icon":"🍗"},{"name":"番茄鸡蛋盖饭","type":"米饭","tags":["番茄","素食"],"reason":"酸甜清爽，不想吃重口时的可靠选择。","icon":"🍅"},{"name":"土豆烧鸡盖饭","type":"米饭","tags":["鸡肉","辣"],"reason":"软糯土豆配米饭，饱腹感满分。","icon":"🥔"},{"name":"香菇滑鸡饭","type":"米饭","tags":["鸡肉","菌菇"],"reason":"鲜香温和，适合不吃辣的日子。","icon":"🍄"},{"name":"咖喱鸡排饭","type":"米饭","tags":["鸡肉","辣","乳制品"],"reason":"浓郁咖喱配脆鸡排，元气加餐。","icon":"🍛"},{"name":"照烧鸡腿饭","type":"米饭","tags":["鸡肉"],"reason":"咸甜照烧汁，轻松又满足。","icon":"🍱"},{"name":"台式卤肉饭","type":"米饭","tags":["猪肉","葱","姜","蒜"],"reason":"香喷喷的肉燥，很有幸福感。","icon":"🥣"},{"name":"鱼香肉丝盖饭","type":"米饭","tags":["猪肉","辣","葱","姜","蒜"],"reason":"酸甜微辣，妥妥的下饭菜。","icon":"🥢"},{"name":"宫保鸡丁盖饭","type":"米饭","tags":["鸡肉","辣","花生","葱","姜","蒜"],"reason":"酸甜带香，想吃有味道的选它。","icon":"🍚"},{"name":"小炒肉盖饭","type":"米饭","tags":["猪肉","辣"],"reason":"香辣开胃，适合胃口大开的一餐。","icon":"🌶️"},{"name":"麻婆豆腐盖饭","type":"米饭","tags":["素食","辣","葱","姜","蒜"],"reason":"热乎下饭，预算也很友好。","icon":"🫘"},{"name":"地三鲜盖饭","type":"米饭","tags":["素食","葱","姜","蒜"],"reason":"茄子土豆青椒的经典组合。","icon":"🍆"},{"name":"西红柿牛腩饭","type":"米饭","tags":["牛肉","番茄"],"reason":"酸甜浓郁，肉和菜都有。","icon":"🥘"},{"name":"黑椒牛柳饭","type":"米饭","tags":["牛肉"],"reason":"黑椒香气足，适合想吃肉的时候。","icon":"🥩"},{"name":"肥牛饭","type":"米饭","tags":["牛肉","葱","姜","蒜"],"reason":"肉香浓、速度快的便当选择。","icon":"🍖"},{"name":"木须肉盖饭","type":"米饭","tags":["猪肉","鸡蛋","葱","姜","蒜"],"reason":"清爽有蛋有肉，家常味道。","icon":"🥚"},{"name":"青椒肉丝盖饭","type":"米饭","tags":["猪肉","辣"],"reason":"下饭神器，经典中的经典。","icon":"🌶️"},{"name":"回锅肉盖饭","type":"米饭","tags":["猪肉","辣","葱","姜","蒜"],"reason":"肥而不腻，川菜经典配饭。","icon":"🥓"},{"name":"糖醋里脊盖饭","type":"米饭","tags":["猪肉"],"reason":"酸甜酥脆，小朋友都喜欢。","icon":"🍖"},{"name":"红烧排骨饭","type":"米饭","tags":["猪肉","姜"],"reason":"浓油赤酱，啃排骨超满足。","icon":"🍖"},{"name":"红烧茄子饭","type":"米饭","tags":["素食","蒜"],"reason":"软嫩入味，素菜也能很下饭。","icon":"🍆"},{"name":"酸辣土豆丝饭","type":"米饭","tags":["素食","辣","酸"],"reason":"脆爽酸辣，快手又实惠。","icon":"🥔"},{"name":"鱼香茄子饭","type":"米饭","tags":["素食","辣","葱","姜","蒜"],"reason":"茄子吸饱鱼香汁，超下饭。","icon":"🍆"},{"name":"蒜苔炒肉盖饭","type":"米饭","tags":["猪肉","蒜"],"reason":"蒜香扑鼻，家常好味。","icon":"🥬"},{"name":"豆角烧肉盖饭","type":"米饭","tags":["猪肉"],"reason":"豆角吸满肉汁，配饭一绝。","icon":"🫛"},{"name":"酸菜肉丝盖饭","type":"米饭","tags":["猪肉","酸"],"reason":"酸爽开胃，夏天吃很舒服。","icon":"🥬"},{"name":"梅菜扣肉饭","type":"米饭","tags":["猪肉"],"reason":"肥而不腻，梅菜香浓。","icon":"🥓"},{"name":"滑蛋虾仁饭","type":"米饭","tags":["海鲜","鸡蛋"],"reason":"滑嫩蛋香配虾仁，鲜。","icon":"🍤"},{"name":"叉烧饭","type":"米饭","tags":["猪肉"],"reason":"蜜汁叉烧，港式经典。","icon":"🍖"},{"name":"白切鸡饭","type":"米饭","tags":["鸡肉","姜"],"reason":"清淡鲜嫩，蘸姜葱酱绝配。","icon":"🍗"},{"name":"可乐鸡翅饭","type":"米饭","tags":["鸡肉"],"reason":"甜香入味，简单治愈。","icon":"🍗"},{"name":"孜然牛肉饭","type":"米饭","tags":["牛肉","辣","葱","姜","蒜"],"reason":"孜然香气扑鼻，西北风味。","icon":"🥩"},{"name":"咖喱牛肉饭","type":"米饭","tags":["牛肉","辣","乳制品"],"reason":"浓郁咖喱配牛肉块，扎实。","icon":"🍛"},{"name":"香辣鸡腿饭","type":"米饭","tags":["鸡肉","辣"],"reason":"香辣过瘾，鸡腿肉嫩。","icon":"🍗"},{"name":"黑椒鸡腿饭","type":"米饭","tags":["鸡肉"],"reason":"黑椒浓香，经典便当。","icon":"🍗"},{"name":"咸肉菜饭","type":"米饭","tags":["猪肉","素食"],"reason":"咸肉配青菜，江南风味。","icon":"🍚"},{"name":"香肠煲仔饭","type":"米饭","tags":["猪肉"],"reason":"锅底锅巴香脆，腊肠油润。","icon":"🍲"},{"name":"滑鸡煲仔饭","type":"米饭","tags":["鸡肉","姜"],"reason":"嫩鸡配锅巴，暖香。","icon":"🍲"},{"name":"腊味煲仔饭","type":"米饭","tags":["猪肉"],"reason":"经典广式煲仔饭，酱香十足。","icon":"🍲"},{"name":"牛肉窝蛋饭","type":"米饭","tags":["牛肉","鸡蛋"],"reason":"生蛋拌热饭，嫩滑浓郁。","icon":"🥩"},{"name":"鸡排蛋包饭","type":"米饭","tags":["鸡肉","鸡蛋","乳制品"],"reason":"蛋皮裹饭配鸡排，日式满足感。","icon":"🍳"},{"name":"蛋包饭","type":"米饭","tags":["鸡蛋","番茄"],"reason":"经典日式蛋包饭，酸甜开胃。","icon":"🍳"},{"name":"扬州炒饭","type":"米饭","tags":["鸡蛋","海鲜","葱"],"reason":"粒粒分明，配料丰富。","icon":"🍚"},{"name":"蛋炒饭","type":"米饭","tags":["鸡蛋","葱"],"reason":"简单朴素却永远好吃。","icon":"🍳"},{"name":"牛肉炒饭","type":"米饭","tags":["牛肉","葱","姜","蒜"],"reason":"镬气十足，牛肉香浓。","icon":"🥩"},{"name":"腊肠炒饭","type":"米饭","tags":["猪肉","葱"],"reason":"腊肠油香配米饭，超满足。","icon":"🍚"},{"name":"海鲜炒饭","type":"米饭","tags":["海鲜","鸡蛋","葱"],"reason":"虾仁鱿鱼配米饭，鲜香。","icon":"🦐"},{"name":"咖喱炒饭","type":"米饭","tags":["鸡肉","辣","乳制品"],"reason":"咖喱香气浓郁，简单美味。","icon":"🍛"},{"name":"酸菜炒饭","type":"米饭","tags":["猪肉","酸"],"reason":"酸爽开胃，不油腻。","icon":"🍚"},{"name":"菠萝炒饭","type":"米饭","tags":["海鲜","鸡蛋"],"reason":"泰式酸甜，果香开胃。","icon":"🍍"},{"name":"鳗鱼饭","type":"米饭","tags":["海鲜"],"reason":"蒲烧鳗鱼配甜酱汁，日式高级感。","icon":"🍱"},{"name":"亲子丼","type":"米饭","tags":["鸡肉","鸡蛋"],"reason":"日式鸡肉滑蛋饭，温柔。","icon":"🍳"},{"name":"牛肉丼","type":"米饭","tags":["牛肉","葱"],"reason":"日式牛肉饭，甜咸肉香。","icon":"🥩"},{"name":"猪排饭","type":"米饭","tags":["猪肉"],"reason":"日式炸猪排配卷心菜，酥脆。","icon":"🍱"},{"name":"天妇罗饭","type":"米饭","tags":["海鲜","鸡蛋"],"reason":"日式天妇罗盖饭，酥脆清爽。","icon":"🍤"},{"name":"石锅拌饭","type":"米饭","tags":["牛肉","辣","鸡蛋"],"reason":"热乎锅巴配丰富配菜，层次很足。","icon":"🍳"},{"name":"烤肉拌饭","type":"米饭","tags":["鸡肉","牛肉","辣"],"reason":"香烤肉配蔬菜，咸香开胃。","icon":"🥙"},{"name":"韩式泡菜炒饭","type":"米饭","tags":["辣","猪肉","葱","姜","蒜"],"reason":"酸辣泡菜配猪肉，开胃。","icon":"🌶️"},{"name":"韩式牛肉拌饭","type":"米饭","tags":["牛肉","辣"],"reason":"韩式甜辣酱拌牛肉，过瘾。","icon":"🥩"},{"name":"海南鸡饭","type":"米饭","tags":["鸡肉"],"reason":"新加坡国菜，鸡肉嫩姜油饭香。","icon":"🍗"},{"name":"泰式打抛肉饭","type":"米饭","tags":["猪肉","辣","海鲜"],"reason":"泰式香辣肉末配米饭，异域感。","icon":"🌶️"},{"name":"滑蛋牛肉饭","type":"米饭","tags":["牛肉","鸡蛋"],"reason":"滑嫩蛋汁裹牛肉，香浓。","icon":"🥩"},{"name":"洋葱猪排饭","type":"米饭","tags":["猪肉","葱"],"reason":"洋葱甜香配厚切猪排。","icon":"🥩"},{"name":"三杯鸡饭","type":"米饭","tags":["鸡肉","辣","葱","姜","蒜"],"reason":"台式三杯鸡，九层塔香浓。","icon":"🍗"},{"name":"红烧肉饭","type":"米饭","tags":["猪肉"],"reason":"浓油赤酱红烧肉，肥而不腻。","icon":"🥓"},{"name":"糖醋排骨饭","type":"米饭","tags":["猪肉"],"reason":"酸甜酥脆排骨，下饭。","icon":"🍖"},{"name":"香菇卤肉饭","type":"米饭","tags":["猪肉","菌菇"],"reason":"香菇肉燥更鲜香。","icon":"🍄"},{"name":"芝士焗饭","type":"米饭","tags":["乳制品","鸡肉"],"reason":"拉丝芝士配鸡肉，西式满足。","icon":"🧀"},{"name":"黑椒猪排饭","type":"米饭","tags":["猪肉"],"reason":"黑椒浓香，厚切猪排。","icon":"🥩"},{"name":"辣子鸡饭","type":"米饭","tags":["鸡肉","辣","花生"],"reason":"干辣香脆，越吃越爽。","icon":"🌶️"},{"name":"水煮牛肉饭","type":"米饭","tags":["牛肉","辣","葱","姜","蒜"],"reason":"麻辣鲜香，牛肉嫩滑。","icon":"🌶️"},{"name":"番茄鱼饭","type":"米饭","tags":["海鲜","番茄"],"reason":"酸甜番茄汁配鱼片，鲜。","icon":"🐟"},{"name":"菌菇滑鸡饭","type":"米饭","tags":["鸡肉","菌菇"],"reason":"多种菌菇配鸡肉，鲜香。","icon":"🍄"},{"name":"板栗烧鸡饭","type":"米饭","tags":["鸡肉"],"reason":"板栗粉糯配鸡块，秋天味道。","icon":"🌰"},{"name":"口水鸡饭","type":"米饭","tags":["鸡肉","辣","花生"],"reason":"麻辣鲜香凉鸡，口水直流。","icon":"🌶️"},{"name":"豆豉排骨饭","type":"米饭","tags":["猪肉","蒜"],"reason":"豆豉蒸排骨，港式点心风。","icon":"🍖"},{"name":"滑蛋叉烧饭","type":"米饭","tags":["猪肉","鸡蛋"],"reason":"滑嫩蛋汁裹叉烧，黯然销魂。","icon":"🍳"},{"name":"咸鱼鸡粒炒饭","type":"米饭","tags":["鸡肉","海鲜"],"reason":"咸鱼香配鸡粒，港式经典。","icon":"🍚"},{"name":"咖喱猪排饭","type":"米饭","tags":["猪肉","乳制品"],"reason":"日式咖喱配炸猪排，酥脆浓郁。","icon":"🍛"},{"name":"牛丼温泉蛋饭","type":"米饭","tags":["牛肉","鸡蛋"],"reason":"戳破温泉蛋拌牛肉，嫩滑。","icon":"🍳"},{"name":"酸豆角肉沫饭","type":"米饭","tags":["猪肉","酸"],"reason":"咸酸开胃，湘味十足。","icon":"🫘"},{"name":"泡椒鸡杂饭","type":"米饭","tags":["鸡肉","辣","内脏"],"reason":"酸辣爽脆，重口味最爱。","icon":"🌶️"},{"name":"孜然羊肉饭","type":"米饭","tags":["羊肉","辣","葱","姜","蒜"],"reason":"西北风味，孜然飘香。","icon":"🍖"},{"name":"尖椒牛柳饭","type":"米饭","tags":["牛肉","辣"],"reason":"尖椒辣配嫩牛柳，下饭。","icon":"🌶️"},{"name":"铁板黑椒牛柳饭","type":"米饭","tags":["牛肉"],"reason":"铁板sizzling，黑椒浓香。","icon":"🥩"},{"name":"照烧鸡排饭","type":"米饭","tags":["鸡肉"],"reason":"日式照烧汁，甜咸适中。","icon":"🍱"},{"name":"芝士猪排饭","type":"米饭","tags":["猪肉","乳制品"],"reason":"爆浆芝士猪排，拉丝快乐。","icon":"🧀"},{"name":"新疆手抓饭","type":"米饭","tags":["羊肉","胡萝卜"],"reason":"羊肉胡萝卜配油饭，香。","icon":"🍚"},{"name":"闽南咸饭","type":"米饭","tags":["猪肉","菌菇"],"reason":"香菇虾米咸饭，闽南风味。","icon":"🍚"},{"name":"紫菜包饭","type":"米饭","tags":["海鲜","鸡蛋"],"reason":"韩式紫菜包饭，便携。","icon":"🍙"},{"name":"土耳其烤肉饭","type":"米饭","tags":["鸡肉","牛肉"],"reason":"旋转烤肉配沙拉，量大。","icon":"🥙"},{"name":"黄焖排骨饭","type":"米饭","tags":["猪肉","辣"],"reason":"排骨软烂入味，比鸡更满足。","icon":"🍖"},{"name":"黄焖牛腩饭","type":"米饭","tags":["牛肉","辣"],"reason":"牛腩炖到软糯，香。","icon":"🥘"},{"name":"干锅肥肠饭","type":"米饭","tags":["内脏","辣","葱","姜","蒜"],"reason":"干锅肥肠香辣有嚼劲。","icon":"🌶️"},{"name":"京酱肉丝饭","type":"米饭","tags":["猪肉","葱"],"reason":"京酱甜香配葱丝卷饼风。","icon":"🥢"},{"name":"榨菜牛肉饭","type":"米饭","tags":["牛肉"],"reason":"咸香榨菜嫩牛肉，快手。","icon":"🥩"},{"name":"菌菇牛肉饭","type":"米饭","tags":["牛肉","菌菇"],"reason":"多种菇配牛肉，鲜上加鲜。","icon":"🍄"},{"name":"香菇鸡肉饭","type":"米饭","tags":["鸡肉","菌菇"],"reason":"香菇鸡肉经典搭配，鲜。","icon":"🍄"},{"name":"老干妈鸡丁饭","type":"米饭","tags":["鸡肉","辣"],"reason":"老干妈炒鸡丁，香辣下饭。","icon":"🌶️"},{"name":"笋尖烧肉饭","type":"米饭","tags":["猪肉"],"reason":"鲜笋配五花肉，春日味道。","icon":"🎋"},{"name":"芋儿烧鸡饭","type":"米饭","tags":["鸡肉","辣"],"reason":"软糯芋头配烧鸡，川味。","icon":"🥔"},{"name":"啤酒鸭饭","type":"米饭","tags":["鸭肉","辣","葱","姜","蒜"],"reason":"酒香浓郁，下饭利器。","icon":"🦆"},{"name":"烤鸭腿饭","type":"米饭","tags":["鸭肉"],"reason":"烤鸭腿配梅子酱，油香。","icon":"🦆"},{"name":"兰州牛肉面","type":"面食","tags":["牛肉","葱","姜","蒜"],"reason":"一碗热汤面，清爽又暖胃。","icon":"🍜"},{"name":"重庆小面","type":"面食","tags":["辣","葱","姜","蒜","花生"],"reason":"麻辣鲜香，想吃辣时别错过。","icon":"🍜"},{"name":"炸酱面","type":"面食","tags":["猪肉","葱","姜","蒜"],"reason":"酱香扎实，吃起来特别满足。","icon":"🥢"},{"name":"番茄鸡蛋面","type":"面食","tags":["番茄","素食"],"reason":"酸甜汤底，简单又舒服。","icon":"🍅"},{"name":"鸡丝凉面","type":"面食","tags":["鸡肉","辣","花生"],"reason":"凉爽开胃，适合天气热的时候。","icon":"🥗"},{"name":"葱油拌面","type":"面食","tags":["素食","葱","姜","蒜"],"reason":"香而不腻，快速解决一顿饭。","icon":"🍜"},{"name":"意大利肉酱面","type":"面食","tags":["牛肉","猪肉","西式","乳制品"],"reason":"酸香浓郁，有一点小仪式感。","icon":"🍝"},{"name":"奶油培根意面","type":"面食","tags":["猪肉","西式","乳制品"],"reason":"浓郁奶香，适合犒劳自己。","icon":"🍝"},{"name":"酸汤肥牛面","type":"面食","tags":["牛肉","辣"],"reason":"酸辣开胃，口味比较有记忆点。","icon":"🍜"},{"name":"鸡汤面","type":"面食","tags":["鸡肉","葱","姜","蒜"],"reason":"清淡暖胃，疲惫时很友好。","icon":"🥣"},{"name":"牛肉刀削面","type":"面食","tags":["牛肉","葱","姜","蒜"],"reason":"面条筋道，饱腹感在线。","icon":"🍜"},{"name":"红烧牛肉面","type":"面食","tags":["牛肉","葱","姜","蒜"],"reason":"经典红烧牛肉汤面，肉大。","icon":"🍜"},{"name":"肥肠面","type":"面食","tags":["内脏","辣","葱","姜","蒜"],"reason":"肥肠软烂香辣，重口最爱。","icon":"🍜"},{"name":"豌杂面","type":"面食","tags":["素食","辣","花生"],"reason":"豌豆杂酱面，重庆风味。","icon":"🍜"},{"name":"担担面","type":"面食","tags":["猪肉","辣","花生"],"reason":"麻辣肉臊面，四川经典。","icon":"🍜"},{"name":"热干面","type":"面食","tags":["素食","花生"],"reason":"武汉招牌，麻酱浓郁。","icon":"🍜"},{"name":"油泼面","type":"面食","tags":["素食","辣"],"reason":"热油泼辣子蒜，香气爆棚。","icon":"🍜"},{"name":"biangbiang面","type":"面食","tags":["素食","辣"],"reason":"宽如腰带，陕西豪放。","icon":"🍜"},{"name":"岐山臊子面","type":"面食","tags":["猪肉","酸","辣"],"reason":"酸辣汤面，陕西经典。","icon":"🍜"},{"name":"羊肉泡馍","type":"面食","tags":["羊肉","葱","姜","蒜"],"reason":"掰馍泡汤，西安味道。","icon":"🍲"},{"name":"打卤面","type":"面食","tags":["猪肉","鸡蛋","菌菇"],"reason":"北京打卤面，卤汁浓郁。","icon":"🍜"},{"name":"阳春面","type":"面食","tags":["素食"],"reason":"清汤素面，简约而不简单。","icon":"🍜"},{"name":"雪菜肉丝面","type":"面食","tags":["猪肉"],"reason":"雪菜咸香，江南小面。","icon":"🍜"},{"name":"大排面","type":"面食","tags":["猪肉"],"reason":"红烧大肉排配面，扎实。","icon":"🍖"},{"name":"焖肉面","type":"面食","tags":["猪肉"],"reason":"苏式焖肉，入口即化。","icon":"🍖"},{"name":"爆鱼面","type":"面食","tags":["海鲜"],"reason":"苏式爆鱼，酥脆香甜。","icon":"🐟"},{"name":"片儿川","type":"面食","tags":["猪肉","笋"],"reason":"杭州片儿川，雪菜笋片鲜肉。","icon":"🍜"},{"name":"虾爆鳝面","type":"面食","tags":["海鲜"],"reason":"杭州名面，虾脆鳝香。","icon":"🦐"},{"name":"担仔面","type":"面食","tags":["海鲜"],"reason":"台南担仔面，小巧精致。","icon":"🍜"},{"name":"川味麻辣牛肉面","type":"面食","tags":["牛肉","辣"],"reason":"麻辣红油牛肉面，够劲。","icon":"🌶️"},{"name":"番茄牛腩面","type":"面食","tags":["牛肉","番茄"],"reason":"酸甜番茄牛腩面，浓郁。","icon":"🍅"},{"name":"酸菜鱼面","type":"面食","tags":["海鲜","辣","葱","姜","蒜"],"reason":"酸菜鱼片配面，酸辣开胃。","icon":"🐟"},{"name":"藤椒鸡面","type":"面食","tags":["鸡肉","辣"],"reason":"藤椒麻香配嫩鸡，爽口。","icon":"🌶️"},{"name":"日式豚骨拉面","type":"面食","tags":["猪肉","鸡蛋"],"reason":"浓白豚骨汤，日式经典。","icon":"🍜"},{"name":"味噌拉面","type":"面食","tags":["猪肉","海鲜"],"reason":"味噌汤底，咸香浓郁。","icon":"🍜"},{"name":"酱油拉面","type":"面食","tags":["猪肉"],"reason":"清透酱油汤底，经典。","icon":"🍜"},{"name":"盐味拉面","type":"面食","tags":["鸡肉","海鲜"],"reason":"清淡盐味，鲜味突出。","icon":"🍜"},{"name":"沾面","type":"面食","tags":["猪肉"],"reason":"面蘸浓汁，劲道有嚼劲。","icon":"🍜"},{"name":"日式炒面","type":"面食","tags":["猪肉","西式"],"reason":"日式炒面配蛋黄酱，香。","icon":"🍝"},{"name":"乌冬面","type":"面食","tags":["素食","鸡蛋"],"reason":"Q弹乌冬，汤或炒都好。","icon":"🍜"},{"name":"咖喱乌冬","type":"面食","tags":["鸡肉","辣","乳制品"],"reason":"咖喱浓汁配乌冬，暖身。","icon":"🍛"},{"name":"荞麦面","type":"面食","tags":["素食"],"reason":"清爽荞麦面，冷食解暑。","icon":"🍜"},{"name":"冷面（韩式/东北）","type":"面食","tags":["牛肉","鸡蛋","辣"],"reason":"酸甜爽滑，夏天必备。","icon":"🧊"},{"name":"韩式炸酱面","type":"面食","tags":["猪肉","葱"],"reason":"韩式黑色炸酱面，甜咸。","icon":"🍜"},{"name":"海鲜拉面","type":"面食","tags":["海鲜","辣"],"reason":"韩式/中式海鲜辣面，鲜。","icon":"🦐"},{"name":"番茄意面","type":"面食","tags":["素食","番茄","西式"],"reason":"番茄酱意面，经典。","icon":"🍝"},{"name":"青酱意面","type":"面食","tags":["素食","乳制品","西式"],"reason":"罗勒青酱意面，清新。","icon":"🌿"},{"name":"蘑菇奶油意面","type":"面食","tags":["菌菇","乳制品","西式"],"reason":"奶油蘑菇意面，浓郁。","icon":"🍄"},{"name":"海鲜意面","type":"面食","tags":["海鲜","番茄","西式"],"reason":"海鲜番茄意面，鲜。","icon":"🦐"},{"name":"千层面","type":"面食","tags":["牛肉","乳制品","西式"],"reason":"多层奶酪肉酱，满足感爆棚。","icon":"🧀"},{"name":"麻辣拌面","type":"面食","tags":["素食","辣","花生"],"reason":"麻辣干拌，简单够劲。","icon":"🌶️"},{"name":"双椒鸡拌面","type":"面食","tags":["鸡肉","辣"],"reason":"双椒香辣鸡丁拌面。","icon":"🌶️"},{"name":"牛肉炒面","type":"面食","tags":["牛肉","葱","姜","蒜"],"reason":"镬气十足，牛肉香。","icon":"🍝"},{"name":"鸡蛋炒面","type":"面食","tags":["鸡蛋","葱"],"reason":"家常快手，管饱。","icon":"🍝"},{"name":"肉丝炒面","type":"面食","tags":["猪肉","葱"],"reason":"肉丝青菜炒面，经典。","icon":"🍝"},{"name":"海鲜炒面","type":"面食","tags":["海鲜","葱"],"reason":"什锦海鲜炒面，鲜香。","icon":"🦐"},{"name":"炒刀削面","type":"面食","tags":["猪肉","辣"],"reason":"刀削面翻炒入味，筋道。","icon":"🍝"},{"name":"新疆拌面","type":"面食","tags":["羊肉","辣","葱","姜","蒜"],"reason":"拉条子配炒菜，西北豪迈。","icon":"🍜"},{"name":"臊子干拌面","type":"面食","tags":["猪肉","辣"],"reason":"肉臊干拌，香而不腻。","icon":"🍜"},{"name":"麻辣凉面","type":"面食","tags":["素食","辣","花生"],"reason":"夏日麻辣凉面，解暑。","icon":"🥗"},{"name":"麻酱凉面","type":"面食","tags":["素食","花生"],"reason":"浓稠麻酱凉面，香。","icon":"🥣"},{"name":"咸蛋黄拌面","type":"面食","tags":["鸡蛋"],"reason":"网红咸蛋黄，沙沙浓香。","icon":"🍳"},{"name":"火鸡面","type":"面食","tags":["辣"],"reason":"超辣网红泡面，刺激。","icon":"🔥"},{"name":"宜宾燃面","type":"面食","tags":["素食","辣","花生"],"reason":"干辣香脆，点燃味蕾。","icon":"🔥"},{"name":"甜水面","type":"面食","tags":["素食","花生"],"reason":"成都甜水面，甜辣麻香。","icon":"🍜"},{"name":"酸菜牛肉面","type":"面食","tags":["牛肉","辣","酸"],"reason":"老坛酸菜牛肉，酸爽开胃。","icon":"🍜"},{"name":"酸汤面","type":"面食","tags":["素食","酸"],"reason":"醋椒酸汤面，醒酒解腻。","icon":"🍜"},{"name":"姜鸭面","type":"面食","tags":["鸭肉","辣","姜"],"reason":"仔姜鸭子面，香辣宜宾味。","icon":"🦆"},{"name":"牛肉丸面","type":"面食","tags":["牛肉"],"reason":"Q弹牛肉丸配面，潮汕味。","icon":"🍡"},{"name":"鱼蛋面","type":"面食","tags":["海鲜"],"reason":"港式咖喱鱼蛋面，Q弹。","icon":"🍡"},{"name":"云吞面","type":"面食","tags":["猪肉","海鲜"],"reason":"港式云吞竹升面，弹牙。","icon":"🥟"},{"name":"鲜虾云吞面","type":"面食","tags":["海鲜"],"reason":"整虾云吞，港式奢华。","icon":"🍤"},{"name":"馄饨面","type":"面食","tags":["猪肉","海鲜"],"reason":"小馄饨细面，江南经典。","icon":"🥟"},{"name":"水饺面","type":"面食","tags":["猪肉","鸡蛋"],"reason":"饺子配面条，双份快乐。","icon":"🥟"},{"name":"手擀面（打卤）","type":"面食","tags":["素食","鸡蛋"],"reason":"筋道手擀配卤汁。","icon":"🍜"},{"name":"怪味面","type":"面食","tags":["猪肉","辣"],"reason":"麻辣香甜酸五味俱全。","icon":"🍜"},{"name":"口蘑面","type":"面食","tags":["菌菇","素食"],"reason":"口蘑清汤面，鲜。","icon":"🍄"},{"name":"腌笃鲜面","type":"面食","tags":["猪肉"],"reason":"春笋咸肉鲜肉，江南鲜。","icon":"🍲"},{"name":"河粉汤面","type":"面食","tags":["鸡肉","牛肉","海鲜"],"reason":"粤式河粉汤，爽滑。","icon":"🍜"},{"name":"粿条汤","type":"面食","tags":["牛肉","海鲜"],"reason":"潮汕粿条汤，鲜甜。","icon":"🍜"},{"name":"排骨面","type":"面食","tags":["猪肉","姜"],"reason":"红烧排骨面，肉大汤鲜。","icon":"🍖"},{"name":"肥肠酸辣面","type":"面食","tags":["内脏","辣"],"reason":"肥肠酸辣面，过瘾。","icon":"🌶️"},{"name":"牛肉酸辣面","type":"面食","tags":["牛肉","辣"],"reason":"酸辣面加牛肉，豪华。","icon":"🍜"},{"name":"三鲜面","type":"面食","tags":["海鲜","鸡蛋","菌菇"],"reason":"三鲜汤底，清淡丰富。","icon":"🍲"},{"name":"番茄丸子面","type":"面食","tags":["猪肉","番茄"],"reason":"番茄丸子汤面，家常。","icon":"🍅"},{"name":"竹笋面","type":"面食","tags":["素食","辣"],"reason":"竹笋配辣酱，脆爽。","icon":"🎋"},{"name":"芥兰牛肉面","type":"面食","tags":["牛肉"],"reason":"芥兰脆嫩配牛肉，粤味。","icon":"🥦"},{"name":"干炒牛河","type":"面食","tags":["牛肉","葱"],"reason":"粤式干炒牛河，镬气足。","icon":"🍝"},{"name":"湿炒牛河","type":"面食","tags":["牛肉","葱"],"reason":"带汁湿炒牛河，入味。","icon":"🍝"},{"name":"炒粿条","type":"面食","tags":["海鲜"],"reason":"马来西亚炒粿条，锅气足。","icon":"🍝"},{"name":"螺蛳粉","type":"粉","tags":["辣","花生","葱","姜","蒜"],"reason":"酸辣上头，偶尔来一碗很过瘾。","icon":"🍜"},{"name":"桂林米粉","type":"粉","tags":["猪肉","辣","花生","葱","姜","蒜"],"reason":"爽滑米粉配卤香，经典不踩雷。","icon":"🍜"},{"name":"酸辣粉","type":"粉","tags":["辣","花生","葱","姜","蒜"],"reason":"酸辣解馋，轻松唤醒食欲。","icon":"🥣"},{"name":"云南过桥米线","type":"粉","tags":["鸡肉","牛肉","海鲜","葱","姜","蒜"],"reason":"配料丰富，一碗吃得很满足。","icon":"🍜"},{"name":"砂锅土豆粉","type":"粉","tags":["辣"],"reason":"热乎软糯，天凉时尤其合适。","icon":"🍲"},{"name":"肥牛米线","type":"粉","tags":["牛肉","辣"],"reason":"肉香与米线兼备，饱腹不费力。","icon":"🍜"},{"name":"番茄米线","type":"粉","tags":["番茄","素食"],"reason":"酸甜温和，适合清爽口味。","icon":"🍅"},{"name":"老友粉","type":"粉","tags":["辣","酸","葱","姜","蒜"],"reason":"南宁招牌，酸辣豆豉香。","icon":"🍜"},{"name":"干捞螺蛳粉","type":"粉","tags":["辣","花生"],"reason":"干捞螺蛳粉，酱汁更浓。","icon":"🍜"},{"name":"常德牛肉粉","type":"粉","tags":["牛肉","辣"],"reason":"湖南常德牛肉米粉，香辣。","icon":"🍜"},{"name":"长沙米粉","type":"粉","tags":["猪肉"],"reason":"长沙扁粉，码子丰富。","icon":"🍜"},{"name":"衡阳鱼粉","type":"粉","tags":["海鲜","辣"],"reason":"鲜鱼熬汤米粉，衡阳特色。","icon":"🐟"},{"name":"邵阳米粉","type":"粉","tags":["牛肉","辣"],"reason":"粗粉配红油，邵阳特色。","icon":"🌶️"},{"name":"贵州羊肉粉","type":"粉","tags":["羊肉","辣"],"reason":"遵义羊肉粉，香辣鲜。","icon":"🍖"},{"name":"花溪牛肉粉","type":"粉","tags":["牛肉","辣"],"reason":"贵阳花溪牛肉粉，酸泡菜配。","icon":"🥩"},{"name":"凯里酸汤粉","type":"粉","tags":["酸","番茄"],"reason":"贵州酸汤粉，酸爽开胃。","icon":"🍅"},{"name":"绵阳米粉","type":"粉","tags":["牛肉","辣"],"reason":"细米粉，绵阳特色，汤鲜。","icon":"🍜"},{"name":"越南河粉Pho","type":"粉","tags":["牛肉","葱"],"reason":"越南牛肉河粉，清新香草。","icon":"🍜"},{"name":"冬阴功汤粉","type":"粉","tags":["海鲜","辣","酸"],"reason":"泰式冬阴功，酸辣椰香。","icon":"🍲"},{"name":"叻沙","type":"粉","tags":["海鲜","辣","乳制品"],"reason":"新加坡叻沙，椰香咖喱。","icon":"🍲"},{"name":"福建海鲜粉","type":"粉","tags":["海鲜"],"reason":"闽南海鲜米粉汤，鲜。","icon":"🦐"},{"name":"广东炒米粉","type":"粉","tags":["鸡蛋","葱"],"reason":"粤式炒米粉，镬气香。","icon":"🍝"},{"name":"星洲炒米粉","type":"粉","tags":["海鲜","咖喱"],"reason":"港式星洲炒米，咖喱香。","icon":"🍝"},{"name":"花甲粉","type":"粉","tags":["海鲜","辣","蒜"],"reason":"锡纸花甲粉，鲜辣。","icon":"🍤"},{"name":"鸭血粉丝汤","type":"粉","tags":["内脏","鸭"],"reason":"南京鸭血粉丝，鲜爽。","icon":"🦆"},{"name":"牛肉粉丝汤","type":"粉","tags":["牛肉"],"reason":"淮南牛肉汤粉丝，暖胃。","icon":"🥣"},{"name":"小锅米线","type":"粉","tags":["鸡肉","辣"],"reason":"昆明小锅米线，铜锅煮。","icon":"🍲"},{"name":"豆花米线","type":"粉","tags":["素食"],"reason":"昆明豆花米线，咸甜辣香。","icon":"🥣"},{"name":"土鸡米线","type":"粉","tags":["鸡肉","姜"],"reason":"土鸡熬汤米线，清淡鲜。","icon":"🍗"},{"name":"肥肠米粉","type":"粉","tags":["内脏","辣"],"reason":"红烧肥肠米粉，重口。","icon":"🍖"},{"name":"排骨米线","type":"粉","tags":["猪肉"],"reason":"红烧排骨米线，肉大。","icon":"🍖"},{"name":"酸汤肥牛米线","type":"粉","tags":["牛肉","辣","酸"],"reason":"酸汤肥牛，酸辣过瘾。","icon":"🍲"},{"name":"藤椒鱼米线","type":"粉","tags":["海鲜","辣"],"reason":"藤椒麻香鱼片米线。","icon":"🌶️"},{"name":"杂酱酸辣粉","type":"粉","tags":["猪肉","辣"],"reason":"杂酱配酸辣粉，香。","icon":"🍜"},{"name":"肥肠酸辣粉","type":"粉","tags":["内脏","辣"],"reason":"肥肠酸辣粉，重口过瘾。","icon":"🌶️"},{"name":"杀猪粉","type":"粉","tags":["猪肉","内脏"],"reason":"湖南杀猪粉，猪杂鲜香。","icon":"🍲"},{"name":"螺蛳粉+卤蛋","type":"粉","tags":["辣","鸡蛋"],"reason":"螺蛳粉加卤蛋，豪华版。","icon":"🥚"},{"name":"螺蛳粉+鸭脚","type":"粉","tags":["辣","鸭"],"reason":"螺蛳粉加油炸鸭脚，广西标配。","icon":"🦆"},{"name":"南昌拌粉","type":"粉","tags":["素食","辣","花生"],"reason":"南昌拌粉，香油花生辣。","icon":"🍜"},{"name":"牛肉拌粉","type":"粉","tags":["牛肉","辣"],"reason":"江西牛肉拌粉，香。","icon":"🥩"},{"name":"炒螺蛳粉","type":"粉","tags":["辣","花生"],"reason":"干炒螺蛳粉，镬气足。","icon":"🍝"},{"name":"三鲜米线","type":"粉","tags":["海鲜","鸡蛋","菌菇"],"reason":"三鲜米线，清淡丰富。","icon":"🍲"},{"name":"菌菇米线","type":"粉","tags":["菌菇","素食"],"reason":"菌菇清汤米线，鲜。","icon":"🍄"},{"name":"鸡汤米线","type":"粉","tags":["鸡肉","姜"],"reason":"清炖鸡汤米线，养胃。","icon":"🥣"},{"name":"爆肚粉丝","type":"粉","tags":["内脏"],"reason":"老北京爆肚粉丝，麻酱香。","icon":"🥣"},{"name":"兴化炒米粉","type":"粉","tags":["猪肉","海鲜"],"reason":"莆田兴化粉，细如发丝。","icon":"🍝"},{"name":"南充米粉","type":"粉","tags":["牛肉","辣"],"reason":"南充米粉配油干，绝。","icon":"🍜"},{"name":"贵州花溪粉","type":"粉","tags":["牛肉","辣"],"reason":"花溪牛肉粉升级版。","icon":"🍜"},{"name":"潮汕牛肉丸粉","type":"粉","tags":["牛肉"],"reason":"Q弹手打牛肉丸粉，潮汕。","icon":"🍡"},{"name":"鱼丸粉","type":"粉","tags":["海鲜"],"reason":"潮汕鱼丸粉，鲜甜。","icon":"🍡"},{"name":"凉米线","type":"粉","tags":["素食","辣","花生"],"reason":"云南凉米线，酸甜辣。","icon":"🥗"},{"name":"什锦砂锅粉","type":"粉","tags":["素食","鸡蛋"],"reason":"什锦蔬菜砂锅粉，温暖。","icon":"🍲"},{"name":"酸菜米线","type":"粉","tags":["猪肉","酸"],"reason":"酸菜肉末米线，开胃。","icon":"🥬"},{"name":"火锅宽粉","type":"粉","tags":["辣","葱","姜","蒜"],"reason":"火锅宽粉，软糯入味。","icon":"🌶️"},{"name":"红薯粉（酸辣）","type":"粉","tags":["辣"],"reason":"红薯酸辣粉，Q弹劲道。","icon":"🍜"},{"name":"蕨根粉","type":"粉","tags":["素食","辣"],"reason":"凉拌蕨根粉，酸辣开胃。","icon":"🥗"},{"name":"绵阳米粉（牛肉）","type":"粉","tags":["牛肉","辣"],"reason":"细粉红烧牛肉，绵阳经典。","icon":"🍜"},{"name":"卷筒粉","type":"粉","tags":["猪肉"],"reason":"广西卷筒粉，蒸粉卷肉。","icon":"🌯"},{"name":"猪肠粉","type":"粉","tags":["猪肉"],"reason":"港式猪肠粉，卷粉甜酱。","icon":"🍥"},{"name":"鱼粉（奶白汤）","type":"粉","tags":["海鲜"],"reason":"鲜鱼浓汤米粉，奶白鲜。","icon":"🐟"},{"name":"肥肠土豆粉","type":"粉","tags":["内脏","辣"],"reason":"肥肠土豆粉，软糯香。","icon":"🍲"},{"name":"金针菇肥牛粉","type":"粉","tags":["牛肉","菌菇"],"reason":"金针菇肥牛粉，鲜辣。","icon":"🍄"},{"name":"干拌豌杂粉","type":"粉","tags":["素食","辣"],"reason":"豌杂干拌粉，麻辣香。","icon":"🍜"},{"name":"红烧牛腩粉","type":"粉","tags":["牛肉","辣"],"reason":"红烧牛腩粉，大块肉。","icon":"🥘"},{"name":"砂锅羊肉粉","type":"粉","tags":["羊肉","辣"],"reason":"砂锅羊肉粉，暖身。","icon":"🍲"},{"name":"黑椒牛柳粉","type":"粉","tags":["牛肉"],"reason":"黑椒牛柳炒粉，西味。","icon":"🥩"},{"name":"榨菜肉丝粉","type":"粉","tags":["猪肉"],"reason":"榨菜肉丝粉，咸香快手。","icon":"🍜"},{"name":"肉沫蒸粉","type":"粉","tags":["猪肉"],"reason":"肉沫蒸米粉，广式早茶风。","icon":"🥟"},{"name":"老友猪杂粉","type":"粉","tags":["内脏","辣","酸"],"reason":"猪杂老友粉，南宁味。","icon":"🍲"},{"name":"凉拌粉","type":"粉","tags":["素食","辣"],"reason":"夏日凉拌米粉，清爽。","icon":"🥗"},{"name":"麻辣烫","type":"麻辣","tags":["辣","海鲜","内脏","花生","葱","姜","蒜"],"reason":"菜肉主食都可配，想吃什么自己拿。","icon":"🍢"},{"name":"麻辣香锅","type":"麻辣","tags":["辣","海鲜","内脏","花生","葱","姜","蒜"],"reason":"香辣干锅，适合想吃重口的一晚。","icon":"🥘"},{"name":"冒菜","type":"麻辣","tags":["辣","海鲜","内脏","花生","葱","姜","蒜"],"reason":"一人份的川味热乎菜，选择很多。","icon":"🍲"},{"name":"串串香","type":"麻辣","tags":["辣","海鲜","内脏","花生"],"reason":"和朋友一起吃会更开心。","icon":"🍡"},{"name":"酸菜鱼","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"酸鲜开胃，想吃鱼时的热门选项。","icon":"🐟"},{"name":"水煮肉片","type":"麻辣","tags":["猪肉","辣","葱","姜","蒜"],"reason":"麻辣鲜香，配饭超级过瘾。","icon":"🥘"},{"name":"水煮鱼","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"麻辣嫩滑鱼片，下饭利器。","icon":"🐟"},{"name":"水煮牛肉","type":"麻辣","tags":["牛肉","辣","葱","姜","蒜"],"reason":"麻辣鲜香，牛肉嫩滑。","icon":"🥩"},{"name":"毛血旺","type":"麻辣","tags":["内脏","辣","花生","葱","姜","蒜"],"reason":"鸭血毛肚黄喉，重口大菜。","icon":"🍲"},{"name":"烤鱼","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"香辣热闹，适合约上朋友。","icon":"🐟"},{"name":"烧烤拼盘","type":"麻辣","tags":["鸡肉","牛肉","羊肉","海鲜","辣","葱","姜","蒜"],"reason":"想吃点有烟火气的晚饭就它。","icon":"🍢"},{"name":"麻辣小龙虾","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"夏夜啤酒绝配，剥虾快乐。","icon":"🦞"},{"name":"香辣蟹","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"香辣大闸蟹，过瘾。","icon":"🦀"},{"name":"香辣虾","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"干锅香辣虾，连壳都香。","icon":"🍤"},{"name":"麻辣香锅（素）","type":"麻辣","tags":["素食","辣"],"reason":"全素麻辣香锅，清爽一点。","icon":"🥦"},{"name":"钵钵鸡","type":"麻辣","tags":["鸡肉","辣","花生"],"reason":"冷锅串串，鸡肉为主，红油香。","icon":"🍢"},{"name":"冷锅串串","type":"麻辣","tags":["辣","花生","葱","姜","蒜"],"reason":"不生火的串串，蘸料吃。","icon":"🍡"},{"name":"热锅串串","type":"麻辣","tags":["辣","海鲜","内脏","花生"],"reason":"火锅式串串，冬天合适。","icon":"🍲"},{"name":"麻辣烫（骨汤）","type":"麻辣","tags":["辣"],"reason":"骨汤麻辣烫，不那么麻辣。","icon":"🍢"},{"name":"麻辣拌","type":"麻辣","tags":["辣","花生"],"reason":"东北麻辣拌，干拌更浓。","icon":"🥗"},{"name":"冒烤鸭","type":"麻辣","tags":["鸭肉","辣"],"reason":"冒菜加烤鸭，川味融合。","icon":"🦆"},{"name":"美蛙鱼头","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"美蛙配鱼头，鲜嫩辣。","icon":"🐸"},{"name":"馋嘴蛙","type":"麻辣","tags":["辣","葱","姜","蒜"],"reason":"麻辣牛蛙，鲜嫩弹牙。","icon":"🐸"},{"name":"辣子鸡","type":"麻辣","tags":["鸡肉","辣","花生"],"reason":"干辣椒堆里找鸡肉，香脆。","icon":"🌶️"},{"name":"歌乐山辣子鸡","type":"麻辣","tags":["鸡肉","辣","花生"],"reason":"重庆辣子鸡，干香。","icon":"🌶️"},{"name":"麻婆豆腐","type":"麻辣","tags":["素食","辣","葱","姜","蒜"],"reason":"经典川菜，麻辣鲜香烫。","icon":"🫘"},{"name":"夫妻肺片","type":"麻辣","tags":["内脏","辣","花生"],"reason":"凉拌牛杂，麻辣鲜香。","icon":"🥩"},{"name":"麻辣兔头","type":"麻辣","tags":["辣","花生"],"reason":"成都特色，越啃越香。","icon":"🐰"},{"name":"冷吃兔","type":"麻辣","tags":["辣"],"reason":"自贡冷吃兔，干辣下酒。","icon":"🐰"},{"name":"藤椒鱼","type":"麻辣","tags":["海鲜","辣"],"reason":"藤椒麻香，清香麻辣。","icon":"🐟"},{"name":"青椒鱼","type":"麻辣","tags":["海鲜","辣","葱"],"reason":"青花椒鱼，鲜麻。","icon":"🐟"},{"name":"跳水蛙","type":"麻辣","tags":["辣","葱","姜","蒜"],"reason":"鲜辣跳水牛蛙，嫩。","icon":"🐸"},{"name":"麻辣烫（番茄锅）","type":"麻辣","tags":["番茄","素食"],"reason":"番茄汤底麻辣烫，不辣。","icon":"🍅"},{"name":"冒菜（三鲜）","type":"麻辣","tags":["素食"],"reason":"三鲜冒菜，清淡版。","icon":"🍲"},{"name":"干煸四季豆","type":"麻辣","tags":["素食","辣","葱","姜","蒜"],"reason":"干煸四季豆，肉末焦香。","icon":"🫛"},{"name":"干煸肥肠","type":"麻辣","tags":["内脏","辣","葱","姜","蒜"],"reason":"干煸肥肠，外焦里嫩。","icon":"🌶️"},{"name":"香辣烤鱼（蒜香）","type":"麻辣","tags":["海鲜","辣","蒜"],"reason":"蒜香烤鱼，蒜香浓郁。","icon":"🐟"},{"name":"万州烤鱼","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"重庆万州烤鱼，外焦里嫩。","icon":"🐟"},{"name":"纸包鱼","type":"麻辣","tags":["海鲜","辣"],"reason":"锡纸烤鱼，鲜嫩多汁。","icon":"🐟"},{"name":"麻辣烤翅","type":"麻辣","tags":["鸡肉","辣"],"reason":"烤鸡翅麻辣味，下酒。","icon":"🍗"},{"name":"烤脑花","type":"麻辣","tags":["内脏","辣"],"reason":"烤脑花，麻辣嫩滑。","icon":"🧠"},{"name":"烤猪蹄","type":"麻辣","tags":["猪肉","辣"],"reason":"烤猪蹄，焦香软糯。","icon":"🍖"},{"name":"铁板鱿鱼","type":"麻辣","tags":["海鲜","辣"],"reason":"街头铁板鱿鱼，香辣。","icon":"🦑"},{"name":"烤冷面","type":"麻辣","tags":["鸡蛋","辣","葱","姜","蒜"],"reason":"夜晚嘴馋时的快乐小吃。","icon":"🍢"},{"name":"麻辣豆皮","type":"麻辣","tags":["素食","辣"],"reason":"辣条风豆皮，童年味道。","icon":"🌶️"},{"name":"酸辣粉（麻辣版）","type":"麻辣","tags":["辣","花生","酸"],"reason":"酸辣粉重辣版。","icon":"🍜"},{"name":"冷锅鱼","type":"麻辣","tags":["海鲜","辣"],"reason":"冷锅鱼，吃完鱼加汤涮菜。","icon":"🐟"},{"name":"翘脚牛肉","type":"麻辣","tags":["牛肉"],"reason":"乐山翘脚牛肉，蘸辣椒面。","icon":"🥩"},{"name":"串串香（牛油）","type":"麻辣","tags":["辣","海鲜","内脏"],"reason":"牛油锅底串串，浓香。","icon":"🍡"},{"name":"钢管厂小郡肝","type":"麻辣","tags":["内脏","辣"],"reason":"小郡肝串串，脆爽。","icon":"🍢"},{"name":"麻辣小龙虾（蒜蓉）","type":"麻辣","tags":["海鲜","蒜"],"reason":"蒜香小龙虾，不那么辣。","icon":"🦞"},{"name":"十三香小龙虾","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"十三香小龙虾，层次丰富。","icon":"🦞"},{"name":"麻辣花甲","type":"麻辣","tags":["海鲜","辣","蒜"],"reason":"辣炒花甲，下酒神器。","icon":"🍤"},{"name":"香辣鱿鱼须","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"干辣鱿鱼须，嚼劲十足。","icon":"🦑"},{"name":"香辣田螺","type":"麻辣","tags":["海鲜","辣","葱","姜","蒜"],"reason":"嗦田螺，夏夜快乐。","icon":"🐚"},{"name":"麻辣鸭脖","type":"麻辣","tags":["辣","鸭"],"reason":"卤味鸭脖，越啃越上头。","icon":"🦆"},{"name":"麻辣鸭头","type":"麻辣","tags":["辣","鸭"],"reason":"麻辣鸭头，下酒极品。","icon":"🦆"},{"name":"香辣掌中宝","type":"麻辣","tags":["鸡肉","辣"],"reason":"鸡软骨香辣脆，零食。","icon":"🍗"},{"name":"麻辣牛肉干","type":"麻辣","tags":["牛肉","辣"],"reason":"四川麻辣牛肉干，零食。","icon":"🥩"},{"name":"水煮牛蛙","type":"麻辣","tags":["辣","葱","姜","蒜"],"reason":"水煮牛蛙，鲜嫩麻辣。","icon":"🐸"},{"name":"冒脑花","type":"麻辣","tags":["内脏","辣"],"reason":"冒菜煮脑花，麻辣嫩滑。","icon":"🧠"},{"name":"冒鸭血","type":"麻辣","tags":["鸭","辣"],"reason":"冒菜煮鸭血，嫩滑。","icon":"🦆"},{"name":"麻辣烫（藤椒）","type":"麻辣","tags":["辣"],"reason":"藤椒汤底麻辣烫，麻香。","icon":"🍢"},{"name":"干拌冒菜","type":"麻辣","tags":["辣","花生"],"reason":"干拌冒菜，酱汁裹满。","icon":"🥘"},{"name":"麻辣拌（酸甜）","type":"麻辣","tags":["辣","酸","花生"],"reason":"东北酸甜麻辣拌，奇妙。","icon":"🥗"},{"name":"麻辣香锅（鸡翅）","type":"麻辣","tags":["鸡肉","辣"],"reason":"鸡翅麻辣香锅，肉多。","icon":"🍗"},{"name":"麻辣香锅（排骨）","type":"麻辣","tags":["猪肉","辣"],"reason":"排骨麻辣香锅，啃骨头。","icon":"🍖"},{"name":"麻辣香锅（肥肠）","type":"麻辣","tags":["内脏","辣"],"reason":"肥肠香锅，重口。","icon":"🌶️"},{"name":"麻辣烤鱼（豆豉）","type":"麻辣","tags":["海鲜","辣"],"reason":"豆豉味烤鱼，咸香。","icon":"🐟"},{"name":"麻辣香锅（虾）","type":"麻辣","tags":["海鲜","辣"],"reason":"虾香锅，整虾开背。","icon":"🍤"},{"name":"麻辣烫（冬阴功）","type":"麻辣","tags":["海鲜","辣","酸"],"reason":"泰式风味麻辣烫。","icon":"🍲"},{"name":"鸡胸肉沙拉","type":"轻食","tags":["鸡肉","素食"],"reason":"蔬菜和蛋白质都有，清清爽爽。","icon":"🥗"},{"name":"牛肉能量碗","type":"轻食","tags":["牛肉","素食"],"reason":"谷物、蔬菜、牛肉，均衡又耐饿。","icon":"🥗"},{"name":"鸡肉三明治","type":"轻食","tags":["鸡肉","西式","乳制品"],"reason":"轻盈方便，赶课前也能吃。","icon":"🥪"},{"name":"藜麦蔬菜碗","type":"轻食","tags":["素食"],"reason":"一碗五颜六色，清淡也有饱腹感。","icon":"🥙"},{"name":"日式照烧鸡沙拉","type":"轻食","tags":["鸡肉"],"reason":"甜咸适口，肉菜搭配得刚好。","icon":"🥗"},{"name":"全麦鸡蛋卷","type":"轻食","tags":["素食","鸡蛋"],"reason":"简单温和，早餐晚餐都能胜任。","icon":"🌯"},{"name":"牛油果吐司","type":"轻食","tags":["素食"],"reason":"牛油果配全麦面包，ins风。","icon":"🥑"},{"name":"金枪鱼沙拉","type":"轻食","tags":["海鲜","鸡蛋"],"reason":"金枪鱼蔬菜沙拉，高蛋白。","icon":"🐟"},{"name":"虾仁沙拉","type":"轻食","tags":["海鲜","素食"],"reason":"清爽虾仁沙拉，低卡。","icon":"🍤"},{"name":"牛肉沙拉","type":"轻食","tags":["牛肉","素食"],"reason":"嫩牛肉配生菜，高蛋白。","icon":"🥩"},{"name":"三文鱼沙拉","type":"轻食","tags":["海鲜"],"reason":"烟熏三文鱼沙拉，高级感。","icon":"🍣"},{"name":"凯撒沙拉","type":"轻食","tags":["鸡肉","乳制品"],"reason":"经典凯撒沙拉，芝士浓。","icon":"🥗"},{"name":"考伯沙拉","type":"轻食","tags":["鸡肉","鸡蛋","乳制品"],"reason":"美式彩虹沙拉，丰富。","icon":"🥗"},{"name":"希腊沙拉","type":"轻食","tags":["素食","乳制品"],"reason":"菲达奶酪橄榄，地中海风。","icon":"🫒"},{"name":"尼斯沙拉","type":"轻食","tags":["海鲜","鸡蛋"],"reason":"法式尼斯沙拉，金枪鱼鸡蛋。","icon":"🐟"},{"name":"鸡肉牛油果沙拉","type":"轻食","tags":["鸡肉"],"reason":"鸡胸配牛油果，饱腹。","icon":"🥑"},{"name":"鹰嘴豆泥碗","type":"轻食","tags":["素食"],"reason":"中东鹰嘴豆泥，健康。","icon":"🫘"},{"name":"poke碗（三文鱼）","type":"轻食","tags":["海鲜"],"reason":"夏威夷生鱼拌饭，清爽。","icon":"🍣"},{"name":"poke碗（金枪鱼）","type":"轻食","tags":["海鲜"],"reason":"金枪鱼poke，健康美味。","icon":"🐟"},{"name":"寿司卷","type":"轻食","tags":["海鲜","素食"],"reason":"日式寿司卷，清淡。","icon":"🍣"},{"name":"加州卷","type":"轻食","tags":["海鲜","鸡蛋"],"reason":"牛油果蟹肉卷，美式寿司。","icon":"🍱"},{"name":"紫菜包饭（蔬菜）","type":"轻食","tags":["素食","鸡蛋"],"reason":"韩式无肉紫菜包饭，便携。","icon":"🍙"},{"name":"凉面沙拉","type":"轻食","tags":["素食","鸡蛋"],"reason":"凉面配蔬菜，低卡。","icon":"🥗"},{"name":"玉米鸡肉卷","type":"轻食","tags":["鸡肉"],"reason":"墨西哥鸡肉卷，便携。","icon":"🌯"},{"name":"蔬菜卷饼","type":"轻食","tags":["素食"],"reason":"全素卷饼，健康快手。","icon":"🌯"},{"name":"全麦火腿三明治","type":"轻食","tags":["猪肉","乳制品"],"reason":"火腿芝士三明治，经典。","icon":"🥪"},{"name":"鸡蛋沙拉三明治","type":"轻食","tags":["鸡蛋","乳制品"],"reason":"日式鸡蛋三明治，软绵。","icon":"🥪"},{"name":"BLT三明治","type":"轻食","tags":["猪肉"],"reason":"培根生菜番茄，经典美式。","icon":"🥓"},{"name":"帕尼尼","type":"轻食","tags":["鸡肉","乳制品"],"reason":"意式热压三明治，芝士拉丝。","icon":"🥪"},{"name":"法棍三明治","type":"轻食","tags":["鸡肉"],"reason":"法式长棍三明治，酥脆。","icon":"🥖"},{"name":"开放三明治","type":"轻食","tags":["鸡蛋","乳制品"],"reason":"Smørrebrød北欧风，好看。","icon":"🍞"},{"name":"鸡肉卷（轻食版）","type":"轻食","tags":["鸡肉","乳制品"],"reason":"低脂鸡肉卷，健身餐。","icon":"🌯"},{"name":"牛肉卷（轻食版）","type":"轻食","tags":["牛肉","乳制品"],"reason":"低脂牛肉卷，蛋白高。","icon":"🌯"},{"name":"蔬菜沙拉+鸡胸","type":"轻食","tags":["鸡肉","素食"],"reason":"增肌减脂标配。","icon":"🥗"},{"name":"温野菜沙拉","type":"轻食","tags":["素食"],"reason":"温热蔬菜沙拉，冬天也能吃。","icon":"🥦"},{"name":"烤蔬菜藜麦碗","type":"轻食","tags":["素食"],"reason":"烤南瓜甜椒配藜麦，饱腹。","icon":"🥗"},{"name":"豆腐蔬菜碗","type":"轻食","tags":["素食"],"reason":"老豆腐配糙米饭，素食主义。","icon":"🍚"},{"name":"三文鱼藜麦碗","type":"轻食","tags":["海鲜"],"reason":"三文鱼藜麦，超模碗。","icon":"🍣"},{"name":"鸡胸糙米饭","type":"轻食","tags":["鸡肉"],"reason":"健身党最爱，低卡高蛋。","icon":"🍚"},{"name":"牛肉糙米饭","type":"轻食","tags":["牛肉"],"reason":"牛肉糙米饭，增肌餐。","icon":"🥩"},{"name":"鸡肉汉堡套餐","type":"西式","tags":["鸡肉","西式","乳制品"],"reason":"脆鸡排和薯条，偶尔快乐一下。","icon":"🍔"},{"name":"牛肉汉堡套餐","type":"西式","tags":["牛肉","西式","乳制品"],"reason":"扎实满足，想吃汉堡就选它。","icon":"🍔"},{"name":"披萨","type":"西式","tags":["西式","乳制品","海鲜"],"reason":"芝士香浓，适合和朋友分享。","icon":"🍕"},{"name":"炸鸡拌饭","type":"西式","tags":["鸡肉","西式","辣"],"reason":"酥脆炸鸡配主食，解馋又顶饱。","icon":"🍗"},{"name":"鸡肉卷（西式）","type":"西式","tags":["鸡肉","西式","乳制品"],"reason":"一手拿着吃，方便又有料。","icon":"🌯"},{"name":"意式焗饭","type":"西式","tags":["鸡肉","牛肉","西式","乳制品"],"reason":"奶香热乎，是晚餐的小安慰。","icon":"🧀"},{"name":"薯条+汉堡","type":"西式","tags":["牛肉","西式","乳制品"],"reason":"经典快餐搭配，快乐。","icon":"🍟"},{"name":"炸鸡全家桶","type":"西式","tags":["鸡肉","西式","乳制品"],"reason":"炸鸡+薯条+可乐，全家分享。","icon":"🍗"},{"name":"上校鸡块","type":"西式","tags":["鸡肉","西式"],"reason":"鸡块配酸甜酱，小食。","icon":"🍗"},{"name":"鸡米花","type":"西式","tags":["鸡肉","西式"],"reason":"鸡米花配剧，下午茶。","icon":"🍿"},{"name":"炸鸡腿","type":"西式","tags":["鸡肉","西式"],"reason":"香辣炸鸡腿，脆。","icon":"🍗"},{"name":"烤鸡翅","type":"西式","tags":["鸡肉","西式"],"reason":"奥尔良烤鸡翅，甜香。","icon":"🍗"},{"name":"芝士汉堡","type":"西式","tags":["牛肉","西式","乳制品"],"reason":"双层芝士汉堡，拉丝。","icon":"🍔"},{"name":"培根汉堡","type":"西式","tags":["猪肉","牛肉","乳制品"],"reason":"培根牛肉堡，肉感足。","icon":"🥓"},{"name":"鱼堡","type":"西式","tags":["海鲜","西式","乳制品"],"reason":"深海鳕鱼堡，清爽。","icon":"🐟"},{"name":"虾堡","type":"西式","tags":["海鲜","西式","乳制品"],"reason":"鲜虾堡，Q弹。","icon":"🍤"},{"name":"板烧鸡腿堡","type":"西式","tags":["鸡肉","西式","乳制品"],"reason":"煎烤鸡腿堡，不那么油。","icon":"🍔"},{"name":"辣鸡腿堡","type":"西式","tags":["鸡肉","西式","乳制品","辣"],"reason":"麻辣鸡腿堡，过瘾。","icon":"🌶️"},{"name":"双层牛肉堡","type":"西式","tags":["牛肉","西式","乳制品"],"reason":"双层肉饼，肉欲爆棚。","icon":"🍔"},{"name":"墨西哥鸡肉卷","type":"西式","tags":["鸡肉","西式","乳制品"],"reason":"老北京/墨西哥鸡肉卷。","icon":"🌯"},{"name":"嫩牛五方","type":"西式","tags":["牛肉","西式","辣"],"reason":"嫩牛五方，回忆杀。","icon":"🌯"},{"name":"塔可","type":"西式","tags":["牛肉","鸡肉","西式"],"reason":"墨西哥taco，脆壳。","icon":"🌮"},{"name":"墨西哥卷饼Burrito","type":"西式","tags":["牛肉","鸡肉","西式"],"reason":"大卷饼，饱腹感强。","icon":"🌯"},{"name":"芝士薯条","type":"西式","tags":["素食","乳制品"],"reason":"芝士酱浇薯条，罪恶。","icon":"🍟"},{"name":"肉酱薯条","type":"西式","tags":["牛肉","乳制品"],"reason":"肉酱芝士薯条，poutine风。","icon":"🍟"},{"name":"洋葱圈","type":"西式","tags":["素食","西式"],"reason":"脆炸洋葱圈，小食。","icon":"🧅"},{"name":"炸鱼薯条","type":"西式","tags":["海鲜","西式"],"reason":"英式国菜，配麦芽醋。","icon":"🐟"},{"name":"热狗","type":"西式","tags":["猪肉","西式"],"reason":"美式热狗配芥末酱。","icon":"🌭"},{"name":"三明治火腿芝士","type":"西式","tags":["猪肉","乳制品"],"reason":"烤芝士火腿三明治。","icon":"🥪"},{"name":"潜艇堡","type":"西式","tags":["鸡肉","牛肉","乳制品"],"reason":"赛百味风潜艇堡。","icon":"🥖"},{"name":"烤鸡（整只）","type":"西式","tags":["鸡肉"],"reason":"美式烤鸡，外焦里嫩。","icon":"🍗"},{"name":"牛排","type":"西式","tags":["牛肉"],"reason":"西式牛排配黑椒汁，仪式感。","icon":"🥩"},{"name":"猪肋排","type":"西式","tags":["猪肉"],"reason":"BBQ烤猪肋排，手撕过瘾。","icon":"🍖"},{"name":"烤羊排","type":"西式","tags":["羊肉"],"reason":"孜然烤羊排，香。","icon":"🍖"},{"name":"炸猪排（西式）","type":"西式","tags":["猪肉"],"reason":"日式/西式炸猪排，酥脆。","icon":"🥩"},{"name":"可乐饼","type":"西式","tags":["素食","鸡蛋"],"reason":"日式土豆可乐饼，外脆内软。","icon":"🥔"},{"name":"罗宋汤+面包","type":"西式","tags":["牛肉","番茄"],"reason":"俄式罗宋汤配餐包。","icon":"🍞"},{"name":"奶油蘑菇汤","type":"西式","tags":["菌菇","乳制品"],"reason":"奶油蘑菇汤配法棍。","icon":"🍄"},{"name":"玉米片配酱","type":"西式","tags":["素食","乳制品"],"reason":"Nachos墨西哥玉米片。","icon":"🌽"},{"name":"披萨（夏威夷）","type":"西式","tags":["西式","乳制品","猪肉"],"reason":"菠萝火腿披萨，甜咸。","icon":"🍕"},{"name":"披萨（海鲜）","type":"西式","tags":["西式","乳制品","海鲜"],"reason":"海鲜至尊披萨。","icon":"🍕"},{"name":"披萨（榴莲）","type":"西式","tags":["西式","乳制品"],"reason":"榴莲披萨，爱恨分明。","icon":"🍕"},{"name":"披萨（玛格丽特）","type":"西式","tags":["素食","乳制品","番茄"],"reason":"经典意式，番茄罗勒芝士。","icon":"🍕"},{"name":"披萨（烤肉）","type":"西式","tags":["牛肉","猪肉","乳制品"],"reason":"烤肉披萨，肉香浓郁。","icon":"🍕"},{"name":"意面（黑椒牛柳）","type":"西式","tags":["牛肉","西式","乳制品"],"reason":"黑椒牛柳意面，中式西做。","icon":"🍝"},{"name":"焗红薯","type":"西式","tags":["素食"],"reason":"芝士焗红薯，甜。","icon":"🍠"},{"name":"土豆泥","type":"西式","tags":["素食","乳制品"],"reason":"肯德基土豆泥，奶香。","icon":"🥔"},{"name":"玉米杯","type":"西式","tags":["素食","乳制品"],"reason":"甜玉米杯，清甜。","icon":"🌽"},{"name":"蔬菜沙拉（快餐版）","type":"西式","tags":["素食"],"reason":"快餐配菜沙拉。","icon":"🥗"},{"name":"葡式蛋挞","type":"西式","tags":["乳制品","鸡蛋"],"reason":"葡挞，酥皮蛋液。","icon":"🥮"},{"name":"美式热狗堡","type":"西式","tags":["猪肉","乳制品"],"reason":"大热狗配芝士酱。","icon":"🌭"},{"name":"鸡肉洋葱圈","type":"西式","tags":["鸡肉","西式"],"reason":"鸡肉洋葱圈，更肉。","icon":"🧅"},{"name":"蝴蝶虾","type":"西式","tags":["海鲜","西式"],"reason":"面包糠炸蝴蝶虾。","icon":"🍤"},{"name":"海苔鸡腿","type":"西式","tags":["鸡肉","西式","海鲜"],"reason":"海苔碎裹鸡腿，日式风。","icon":"🍗"},{"name":"薄饼披萨","type":"西式","tags":["西式","乳制品"],"reason":"意式薄底披萨，脆。","icon":"🍕"},{"name":"三鲜水饺","type":"其他","tags":["猪肉","鸡蛋","海鲜"],"reason":"经典水饺，蘸醋辣椒油。","icon":"🥟"},{"name":"猪肉白菜饺子","type":"其他","tags":["猪肉"],"reason":"北方冬至必吃，家常。","icon":"🥟"},{"name":"韭菜鸡蛋饺子","type":"其他","tags":["鸡蛋","素食"],"reason":"韭菜鸡蛋，经典素饺。","icon":"🥟"},{"name":"牛肉芹菜饺子","type":"其他","tags":["牛肉"],"reason":"牛肉芹菜馅，鲜。","icon":"🥟"},{"name":"虾仁水饺","type":"其他","tags":["海鲜","鸡蛋"],"reason":"整虾水饺，鲜美。","icon":"🍤"},{"name":"鲜肉馄饨","type":"其他","tags":["猪肉"],"reason":"小馄饨配虾皮紫菜汤。","icon":"🥟"},{"name":"红油抄手","type":"其他","tags":["猪肉","辣"],"reason":"四川红油抄手，麻辣。","icon":"🌶️"},{"name":"生煎包","type":"其他","tags":["猪肉"],"reason":"上海生煎，底脆汤多。","icon":"🥟"},{"name":"小笼包","type":"其他","tags":["猪肉"],"reason":"南翔小笼包，先喝汤。","icon":"🥟"},{"name":"灌汤包","type":"其他","tags":["猪肉"],"reason":"开封灌汤包，小心烫嘴。","icon":"🥟"},{"name":"肉包子","type":"其他","tags":["猪肉"],"reason":"鲜肉大包，早餐首选。","icon":"🥖"},{"name":"菜包子","type":"其他","tags":["素食"],"reason":"青菜香菇包，清淡。","icon":"🥬"},{"name":"豆沙包","type":"其他","tags":["素食"],"reason":"红豆沙包，甜。","icon":"🫘"},{"name":"馒头+小菜","type":"其他","tags":["素食"],"reason":"白馒头配咸菜，朴素。","icon":"🍞"},{"name":"花卷","type":"其他","tags":["素食"],"reason":"葱油花卷，香软。","icon":"🥐"},{"name":"煎饼果子","type":"其他","tags":["鸡蛋"],"reason":"天津煎饼果子，加薄脆。","icon":"🥞"},{"name":"鸡蛋灌饼","type":"其他","tags":["鸡蛋"],"reason":"街头鸡蛋灌饼，加肠。","icon":"🥞"},{"name":"手抓饼","type":"其他","tags":["鸡蛋","乳制品"],"reason":"台湾手抓饼，千层酥脆。","icon":"🫓"},{"name":"肉夹馍","type":"其他","tags":["猪肉"],"reason":"西安肉夹馍，腊汁肉。","icon":"🥙"},{"name":"凉皮","type":"其他","tags":["素食","辣","花生"],"reason":"陕西凉皮，酸辣筋道。","icon":"🥗"},{"name":"擀面皮","type":"其他","tags":["素食","辣","花生"],"reason":"宝鸡擀面皮，更筋道。","icon":"🥗"},{"name":"肉粽","type":"其他","tags":["猪肉","鸡蛋"],"reason":"端午肉粽，咸香。","icon":"🍙"},{"name":"甜粽","type":"其他","tags":["素食"],"reason":"蜜枣豆沙粽，甜。","icon":"🍙"},{"name":"饭团","type":"其他","tags":["鸡肉","素食"],"reason":"日式/台式饭团，便携。","icon":"🍙"},{"name":"糯米鸡","type":"其他","tags":["鸡肉"],"reason":"广式糯米鸡，荷叶香。","icon":"🍱"},{"name":"皮蛋瘦肉粥","type":"其他","tags":["猪肉","蛋"],"reason":"绵密粥底，暖胃。","icon":"🥣"},{"name":"海鲜粥","type":"其他","tags":["海鲜"],"reason":"潮汕海鲜粥，鲜甜。","icon":"🍲"},{"name":"小米粥+包子","type":"其他","tags":["素食"],"reason":"小米粥配咸菜包子，养胃。","icon":"🥣"},{"name":"南瓜粥","type":"其他","tags":["素食"],"reason":"甜糯南瓜粥，早餐。","icon":"🎃"},{"name":"八宝粥","type":"其他","tags":["素食"],"reason":"甜八宝粥，多谷物。","icon":"🫘"},{"name":"白粥+咸鸭蛋","type":"其他","tags":["素食","蛋"],"reason":"白粥配咸鸭蛋，清淡。","icon":"🥚"},{"name":"广式早茶","type":"其他","tags":["猪肉","海鲜","鸡蛋"],"reason":"虾饺烧卖凤爪肠粉，早茶。","icon":"🫖"},{"name":"虾饺","type":"其他","tags":["海鲜"],"reason":"晶莹虾饺，港式早茶。","icon":"🥟"},{"name":"烧卖","type":"其他","tags":["猪肉"],"reason":"猪肉烧卖，早茶经典。","icon":"🥟"},{"name":"凤爪","type":"其他","tags":["鸡肉"],"reason":"豉汁蒸凤爪，软嫩。","icon":"🍗"},{"name":"肠粉","type":"其他","tags":["鸡蛋","猪肉"],"reason":"布拉肠粉，滑嫩。","icon":"🍥"},{"name":"叉烧包","type":"其他","tags":["猪肉"],"reason":"蜜汁叉烧包，开口笑。","icon":"🥟"},{"name":"流沙包","type":"其他","tags":["鸡蛋","乳制品"],"reason":"咸蛋黄流沙包，流心。","icon":"🥮"},{"name":"榴莲酥","type":"其他","tags":["素食","乳制品"],"reason":"酥脆榴莲酥，香。","icon":"🥮"},{"name":"蛋挞（广式）","type":"其他","tags":["乳制品","鸡蛋"],"reason":"港式蛋挞，嫩滑。","icon":"🥮"},{"name":"火锅（麻辣）","type":"其他","tags":["辣","牛肉","羊肉","海鲜","晚餐"],"reason":"和朋友围着火锅，冬天首选。","icon":"🍲"},{"name":"火锅（清汤）","type":"其他","tags":["牛肉","海鲜"],"reason":"清汤火锅，鲜。","icon":"🍲"},{"name":"火锅（番茄）","type":"其他","tags":["番茄","牛肉"],"reason":"番茄汤底火锅，酸甜。","icon":"🍅"},{"name":"火锅（菌汤）","type":"其他","tags":["菌菇","素食"],"reason":"菌菇汤底火锅，鲜。","icon":"🍄"},{"name":"铜锅涮肉","type":"其他","tags":["羊肉"],"reason":"老北京铜锅涮羊肉，麻酱。","icon":"🍲"},{"name":"潮汕牛肉火锅","type":"其他","tags":["牛肉"],"reason":"潮汕牛肉火锅，现切鲜。","icon":"🥩"},{"name":"椰子鸡火锅","type":"其他","tags":["鸡肉"],"reason":"椰青水煮鸡，清甜。","icon":"🥥"},{"name":"寿喜烧","type":"其他","tags":["牛肉","鸡蛋","乳制品"],"reason":"日式寿喜烧，生蛋蘸。","icon":"🍲"},{"name":"日式涮涮锅","type":"其他","tags":["牛肉","海鲜"],"reason":"日式小火锅，一人食。","icon":"🍲"},{"name":"部队锅","type":"其他","tags":["猪肉","辣","乳制品"],"reason":"韩式部队锅，芝士拉面。","icon":"🌶️"},{"name":"年糕火锅","type":"其他","tags":["辣","乳制品"],"reason":"韩式年糕锅，Q弹。","icon":"🍡"},{"name":"烤肉（韩式）","type":"其他","tags":["牛肉","猪肉","海鲜"],"reason":"韩式烤肉，生菜包肉。","icon":"🥩"},{"name":"烤肉（日式）","type":"其他","tags":["牛肉"],"reason":"日式烧肉，精致。","icon":"🍖"},{"name":"烤肉（东北）","type":"其他","tags":["猪肉","牛肉"],"reason":"东北炭烤，量大豪迈。","icon":"🍖"},{"name":"铁板烧","type":"其他","tags":["牛肉","海鲜"],"reason":"花式铁板烧，有表演感。","icon":"🥩"},{"name":"日式居酒屋","type":"其他","tags":["海鲜","鸡肉"],"reason":"烤串+小食+啤酒，放松。","icon":"🍶"},{"name":"烤串（羊肉串）","type":"其他","tags":["羊肉","辣"],"reason":"新疆/西北烤羊肉串。","icon":"🍢"},{"name":"烤串（牛肉串）","type":"其他","tags":["牛肉","辣"],"reason":"烤牛肉串，下酒。","icon":"🍢"},{"name":"烤串（烤蔬菜）","type":"其他","tags":["素食","辣"],"reason":"烤韭菜茄子青椒，素串。","icon":"🌽"},{"name":"烤生蚝","type":"其他","tags":["海鲜","蒜"],"reason":"蒜蓉烤生蚝，男人的加油站。","icon":"🦪"},{"name":"烤扇贝","type":"其他","tags":["海鲜","蒜"],"reason":"蒜蓉粉丝扇贝，鲜。","icon":"🍤"},{"name":"烤茄子","type":"其他","tags":["素食","辣","蒜"],"reason":"蒜蓉烤茄子，素串之王。","icon":"🍆"},{"name":"烤玉米","type":"其他","tags":["素食"],"reason":"甜糯烤玉米，街头风。","icon":"🌽"},{"name":"烤红薯","type":"其他","tags":["素食"],"reason":"冬天的烤红薯，暖手。","icon":"🍠"},{"name":"关东煮","type":"其他","tags":["素食","鸡蛋","海鲜"],"reason":"便利店关东煮，暖胃。","icon":"🍢"},{"name":"7-11便当","type":"其他","tags":["鸡肉","猪肉"],"reason":"便利店便当，懒人救星。","icon":"🍱"},{"name":"沙县小吃","type":"其他","tags":["猪肉"],"reason":"蒸饺拌面扁肉，国民快餐。","icon":"🥟"},{"name":"兰州拉面（小吃版）","type":"其他","tags":["牛肉"],"reason":"兰州拉面快餐，全国连锁。","icon":"🍜"},{"name":"黄焖鸡米饭（小吃版）","type":"其他","tags":["鸡肉","辣"],"reason":"黄焖鸡连锁，全国都有。","icon":"🍲"},{"name":"猪脚饭","type":"其他","tags":["猪肉"],"reason":"隆江猪脚饭，广东快餐。","icon":"🍖"},{"name":"烧鹅饭","type":"其他","tags":["鸭肉"],"reason":"深井烧鹅饭，粤式经典。","icon":"🦆"},{"name":"白切鸡饭（粤式）","type":"其他","tags":["鸡肉"],"reason":"广东白切鸡，姜葱油。","icon":"🍗"},{"name":"咖喱鱼蛋","type":"其他","tags":["海鲜"],"reason":"港式街头小食，咖喱Q弹。","icon":"🍡"},{"name":"煎饺","type":"其他","tags":["猪肉"],"reason":"日式/中式煎饺，底脆。","icon":"🥟"},{"name":"锅贴","type":"其他","tags":["猪肉"],"reason":"上海锅贴，煎饺亲戚。","icon":"🥟"},{"name":"烧麦（糯米）","type":"其他","tags":["猪肉"],"reason":"糯米烧麦，江南早点。","icon":"🥟"},{"name":"春卷","type":"其他","tags":["素食"],"reason":"炸春卷，酥脆。","icon":"🌯"},{"name":"卤肉卷","type":"其他","tags":["猪肉"],"reason":"街头卤肉卷饼，快手。","icon":"🌯"},{"name":"章鱼小丸子","type":"其他","tags":["海鲜","鸡蛋"],"reason":"章鱼烧，木鱼花飘动。","icon":"🐙"},{"name":"大阪烧","type":"其他","tags":["猪肉","鸡蛋"],"reason":"日式蔬菜煎饼，okonomiyaki。","icon":"🥞"},{"name":"广岛烧","type":"其他","tags":["猪肉","鸡蛋"],"reason":"广岛风大阪烧加炒面。","icon":"🥞"},{"name":"章鱼烧","type":"其他","tags":["海鲜"],"reason":"同章鱼小丸子。","icon":"🐙"},{"name":"御好烧","type":"其他","tags":["鸡蛋","猪肉"],"reason":"关西风味煎饼。","icon":"🥞"},{"name":"寿司拼盘","type":"其他","tags":["海鲜"],"reason":"日料寿司拼盘，丰富。","icon":"🍣"},{"name":"刺身拼盘","type":"其他","tags":["海鲜"],"reason":"生鱼片拼盘，新鲜。","icon":"🍣"},{"name":"拉面（日式）","type":"其他","tags":["猪肉","鸡蛋"],"reason":"日式拉面店，浓郁汤底。","icon":"🍜"},{"name":"咖喱饭（日式）","type":"其他","tags":["鸡肉","乳制品"],"reason":"日式咖喱饭，甜口。","icon":"🍛"},{"name":"炸猪排（日式）","type":"其他","tags":["猪肉"],"reason":"日式炸猪排配卷心菜丝。","icon":"🥩"},{"name":"鳗鱼饭（日式）","type":"其他","tags":["海鲜"],"reason":"蒲烧鳗鱼重箱，高级。","icon":"🍱"},{"name":"天妇罗","type":"其他","tags":["海鲜","鸡蛋"],"reason":"日式炸虾蔬菜，酥脆。","icon":"🍤"},{"name":"泰式咖喱","type":"其他","tags":["鸡肉","辣","乳制品"],"reason":"泰式绿/红咖喱，椰香浓。","icon":"🍛"},{"name":"冬阴功汤","type":"其他","tags":["海鲜","辣","酸"],"reason":"泰国冬阴功，酸辣开胃。","icon":"🍲"},{"name":"菠萝饭（泰式）","type":"其他","tags":["海鲜","鸡蛋"],"reason":"泰式菠萝盅炒饭。","icon":"🍍"},{"name":"海南鸡饭（南洋）","type":"其他","tags":["鸡肉"],"reason":"南洋海南鸡饭，鸡油饭香。","icon":"🍗"},{"name":"越南春卷","type":"其他","tags":["海鲜","素食"],"reason":"透明米纸春卷，清爽。","icon":"🥗"},{"name":"印度咖喱","type":"其他","tags":["鸡肉","辣"],"reason":"印度咖喱配馕，异域。","icon":"🍛"},{"name":"韩式炸鸡","type":"其他","tags":["鸡肉","辣"],"reason":"韩式炸鸡配啤酒，甜辣酱。","icon":"🍗"},{"name":"石锅拌饭（韩式）","type":"其他","tags":["牛肉","辣","鸡蛋"],"reason":"韩式石锅拌饭，锅巴香。","icon":"🍲"},{"name":"泡菜汤","type":"其他","tags":["猪肉","辣"],"reason":"韩式泡菜汤配饭。","icon":"🍲"},{"name":"大酱汤","type":"其他","tags":["豆腐","素食"],"reason":"韩式大酱汤，豆香浓。","icon":"🍲"},{"name":"部队锅拉面","type":"其他","tags":["辣","乳制品","猪肉"],"reason":"韩式部队锅+拉面+芝士。","icon":"🍜"},{"name":"紫菜包饭（韩式）","type":"其他","tags":["鸡蛋","素食"],"reason":"韩式kimbap，野餐。","icon":"🍙"},{"name":"年糕（辣炒）","type":"其他","tags":["辣","素食"],"reason":"韩式辣炒年糕，甜辣。","icon":"🍡"},{"name":"炸酱面（韩式）","type":"其他","tags":["猪肉"],"reason":"韩式黑色炸酱面。","icon":"🍜"},{"name":"海鲜面（韩式）","type":"其他","tags":["海鲜","辣"],"reason":"韩式辣海鲜面。","icon":"🦐"},{"name":"刀削面（晋）","type":"其他","tags":["素食","辣"],"reason":"山西刀削面，浇头丰富。","icon":"🍜"},{"name":"揪片","type":"其他","tags":["素食"],"reason":"山西揪片，面片汤。","icon":"🍜"},{"name":"剔尖","type":"其他","tags":["素食"],"reason":"山西剔尖面，两头尖。","icon":"🍜"},{"name":"水煎包","type":"其他","tags":["猪肉"],"reason":"水煎包，底脆皮软。","icon":"🥟"},{"name":"牛肉盒子","type":"其他","tags":["牛肉"],"reason":"牛肉馅饼，煎得金黄。","icon":"🥟"},{"name":"韭菜盒子","type":"其他","tags":["鸡蛋","素食"],"reason":"韭菜鸡蛋盒子，香。","icon":"🥟"},{"name":"锅盔","type":"其他","tags":["素食"],"reason":"陕西锅盔，硬面饼。","icon":"🍞"},{"name":"肉夹馍（老潼关）","type":"其他","tags":["猪肉"],"reason":"老潼关肉夹馍，千层酥皮。","icon":"🥙"},{"name":"羊肉汤","type":"其他","tags":["羊肉"],"reason":"简阳/单县羊肉汤，浓白。","icon":"🍲"},{"name":"牛肉汤","type":"其他","tags":["牛肉"],"reason":"淮南牛肉汤，配粉丝。","icon":"🥣"},{"name":"胡辣汤","type":"其他","tags":["牛肉","辣"],"reason":"河南胡辣汤，配油条。","icon":"🥣"},{"name":"豆腐脑（咸）","type":"其他","tags":["素食"],"reason":"咸豆腐脑，配油条。","icon":"🥣"},{"name":"豆腐脑（甜）","type":"其他","tags":["素食"],"reason":"甜豆腐脑，加糖。","icon":"🥣"},{"name":"豆浆油条","type":"其他","tags":["素食"],"reason":"经典中式早餐组合。","icon":"🥖"},{"name":"烧饼夹肉","type":"其他","tags":["猪肉"],"reason":"烧饼夹里脊/牛肉。","icon":"🥙"},{"name":"砂锅粥","type":"其他","tags":["海鲜","葱","姜","蒜"],"reason":"暖胃又有鲜味，晚饭很合适。","icon":"🍲"}];
+
+const drinks = [{"name":"多肉葡萄（喜茶）","type":"果茶","tags":[],"reason":"巨峰葡萄手剥，果肉爆汁，经典王炸。","icon":"🍇"},{"name":"多肉莓莓（喜茶）","type":"果茶","tags":["乳制品"],"reason":"草莓配芝士奶盖，酸甜奶香。","icon":"🍓"},{"name":"芝芝莓莓（喜茶）","type":"果茶","tags":["乳制品"],"reason":"草莓+芝士奶盖，喜茶初代网红。","icon":"🍓"},{"name":"芝芝芒芒（喜茶）","type":"果茶","tags":["乳制品"],"reason":"芒果配芝士，热带风情。","icon":"🥭"},{"name":"芝芝桃桃（喜茶）","type":"果茶","tags":["乳制品"],"reason":"水蜜桃+芝士，夏日限定。","icon":"🍑"},{"name":"满杯红柚（喜茶）","type":"果茶","tags":[],"reason":"西柚果肉满满，微苦清爽。","icon":"🍊"},{"name":"烤黑糖波波牛乳（喜茶）","type":"奶茶","tags":["乳制品"],"reason":"黑糖波波+鲜牛奶，无茶底。","icon":"🧋"},{"name":"多肉杨梅（喜茶）","type":"果茶","tags":[],"reason":"杨梅季节限定，酸甜爆汁。","icon":"🫐"},{"name":"喜茶芝芝绿妍（喜茶）","type":"芝士茶","tags":["乳制品"],"reason":"绿茶底+芝士奶盖，简约。","icon":"🍵"},{"name":"多肉青提（喜茶）","type":"果茶","tags":[],"reason":"阳光玫瑰青提，清香脆甜。","icon":"🍇"},{"name":"暴打柠檬绿柠茶（喜茶）","type":"果茶","tags":[],"reason":"手打柠檬茶，清爽解腻。","icon":"🍋"},{"name":"生打椰椰奶冻（喜茶）","type":"奶茶","tags":["乳制品"],"reason":"生椰乳+奶冻，椰香浓郁。","icon":"🥥"},{"name":"椰椰芒芒（喜茶）","type":"果茶","tags":["乳制品"],"reason":"芒果+椰乳，热带风。","icon":"🥭"},{"name":"喜茶美式（喜茶）","type":"咖啡","tags":[],"reason":"清爽美式咖啡，醒神。","icon":"☕"},{"name":"喜茶拿铁（喜茶）","type":"咖啡","tags":["乳制品"],"reason":"顺滑奶咖，日常选择。","icon":"☕"},{"name":"霸气橙子（奈雪）","type":"果茶","tags":[],"reason":"一整颗橙子，果味十足。","icon":"🍊"},{"name":"霸气芝士草莓（奈雪）","type":"果茶","tags":["乳制品"],"reason":"草莓+芝士奶盖，奈雪招牌。","icon":"🍓"},{"name":"霸气芝士芒果（奈雪）","type":"果茶","tags":["乳制品"],"reason":"芒果+芝士，厚肉浓甜。","icon":"🥭"},{"name":"霸气杨梅（奈雪）","type":"果茶","tags":[],"reason":"杨梅果肉，夏日限定。","icon":"🫐"},{"name":"霸气葡萄（奈雪）","type":"果茶","tags":[],"reason":"手剥葡萄，奈雪版多肉葡萄。","icon":"🍇"},{"name":"宝藏奶茶（奈雪）","type":"奶茶","tags":["乳制品"],"reason":"奈雪宝藏茶，黑糖珍珠。","icon":"🧋"},{"name":"金色山脉宝藏茶（奈雪）","type":"奶茶","tags":["乳制品"],"reason":"红茶底+奶盖+珍珠。","icon":"🧋"},{"name":"奈雪可可（奈雪）","type":"热饮","tags":["乳制品"],"reason":"热可可配奶油顶。","icon":"☕"},{"name":"冻顶乌龙宝藏茶（奈雪）","type":"奶茶","tags":["乳制品"],"reason":"乌龙茶底+奶盖，茶香。","icon":"🍵"},{"name":"霸气西柚（奈雪）","type":"果茶","tags":[],"reason":"西柚片+果肉，微苦清爽。","icon":"🍊"},{"name":"霸气柠檬（奈雪）","type":"果茶","tags":[],"reason":"柠檬大片，清新解腻。","icon":"🍋"},{"name":"生椰拿铁（奈雪）（奈雪）","type":"咖啡","tags":["乳制品"],"reason":"生椰拿铁，奈雪咖啡版。","icon":"☕"},{"name":"奈雪美式（奈雪）","type":"咖啡","tags":[],"reason":"经典美式，简单醒神。","icon":"☕"},{"name":"霸气榴莲（奈雪）","type":"果茶","tags":["乳制品"],"reason":"榴莲果肉果茶，重口味。","icon":"🧆"},{"name":"草莓魔法棒搭配（奈雪）","type":"果茶","tags":["乳制品"],"reason":"搭配草莓魔法棒面包。","icon":"🍓"},{"name":"冰鲜柠檬水（蜜雪冰城）","type":"果茶","tags":[],"reason":"4元柠檬水，国民级性价比。","icon":"🍋"},{"name":"珍珠奶茶（蜜雪冰城）","type":"奶茶","tags":["乳制品"],"reason":"经典珍珠奶茶，便宜好喝。","icon":"🧋"},{"name":"摇摇奶昔（草莓）（蜜雪冰城）","type":"奶昔","tags":["乳制品"],"reason":"草莓奶昔，摇一摇更好喝。","icon":"🍓"},{"name":"摩天脆脆（蜜雪冰城）","type":"冰淇淋","tags":["乳制品"],"reason":"3元甜筒，脆皮长筒。","icon":"🍦"},{"name":"黑糖珍珠大圣代（蜜雪冰城）","type":"冰淇淋","tags":["乳制品"],"reason":"黑糖珍珠+冰淇淋，甜。","icon":"🍨"},{"name":"柠檬水（大杯）（蜜雪冰城）","type":"果茶","tags":[],"reason":"蜜雪王牌柠檬水。","icon":"🍋"},{"name":"满杯百香果（蜜雪冰城）","type":"果茶","tags":[],"reason":"百香果果茶，酸甜。","icon":"🥭"},{"name":"黄桃果霸（蜜雪冰城）","type":"果茶","tags":[],"reason":"黄桃大块果肉，甜。","icon":"🍑"},{"name":"蓝莓果粒茶（蜜雪冰城）","type":"果茶","tags":[],"reason":"蓝莓果粒，酸甜。","icon":"🫐"},{"name":"茉莉绿茶（蜜雪冰城）","type":"纯茶","tags":[],"reason":"茉莉花茶，清香无糖。","icon":"🍵"},{"name":"四季春茶（蜜雪冰城）","type":"纯茶","tags":[],"reason":"四季春清茶，解渴。","icon":"🍵"},{"name":"芋圆奶茶（蜜雪冰城）","type":"奶茶","tags":["乳制品"],"reason":"芋圆Q弹，奶茶丝滑。","icon":"🧋"},{"name":"红豆奶茶（蜜雪冰城）","type":"奶茶","tags":["乳制品"],"reason":"红豆绵软，经典搭配。","icon":"🫘"},{"name":"双拼奶茶（蜜雪冰城）","type":"奶茶","tags":["乳制品"],"reason":"珍珠+布丁双拼。","icon":"🧋"},{"name":"三拼霸霸奶茶（蜜雪冰城）","type":"奶茶","tags":["乳制品"],"reason":"珍珠+仙草+椰果三拼。","icon":"🧋"},{"name":"雪顶咖啡（蜜雪冰城）","type":"咖啡","tags":["乳制品"],"reason":"冰淇淋顶咖啡，冰火两重天。","icon":"☕"},{"name":"港式杨枝甘露（蜜雪冰城）","type":"果茶","tags":["乳制品"],"reason":"杨枝甘露，港式经典。","icon":"🥭"},{"name":"蜜桃四季春（蜜雪冰城）","type":"果茶","tags":[],"reason":"蜜桃配四季春茶，清香。","icon":"🍑"},{"name":"棒打鲜橙（蜜雪冰城）","type":"果茶","tags":[],"reason":"鲜橙切片，果味足。","icon":"🍊"},{"name":"奥利奥大圣代（蜜雪冰城）","type":"冰淇淋","tags":["乳制品"],"reason":"奥利奥饼干碎圣代。","icon":"🍨"},{"name":"波霸奶茶（1點點）","type":"奶茶","tags":["乳制品"],"reason":"1點點招牌，大珍珠Q弹。","icon":"🧋"},{"name":"珍珠奶茶（1點點）（1點點）","type":"奶茶","tags":["乳制品"],"reason":"经典珍珠奶茶。","icon":"🧋"},{"name":"冰淇淋红茶（1點點）","type":"奶茶","tags":["乳制品"],"reason":"冰淇淋球+红茶，丝滑。","icon":"🍨"},{"name":"四季春珍波椰（1點點）","type":"奶茶","tags":["乳制品"],"reason":"四季春茶+珍珠+波霸+椰果。","icon":"🧋"},{"name":"波霸奶绿（1點點）","type":"奶茶","tags":["乳制品"],"reason":"绿茶底+波霸，清新。","icon":"🧋"},{"name":"乌龙奶茶（1點點）","type":"奶茶","tags":["乳制品"],"reason":"乌龙茶底奶茶，茶香浓。","icon":"🧋"},{"name":"焦糖奶茶（1點點）","type":"奶茶","tags":["乳制品"],"reason":"焦糖风味奶茶，甜香。","icon":"🧋"},{"name":"抹茶奶茶（1點點）","type":"奶茶","tags":["乳制品"],"reason":"抹茶味奶茶，微苦。","icon":"🍵"},{"name":"阿华田（1點點）","type":"奶茶","tags":["乳制品"],"reason":"麦芽巧克力饮料，经典。","icon":"🍫"},{"name":"可可芭蕾（1點點）","type":"奶茶","tags":["乳制品"],"reason":"巧克力奶茶，浓郁。","icon":"🍫"},{"name":"拿铁（1點點）（1點點）","type":"奶茶","tags":["乳制品"],"reason":"红茶拿铁，奶多茶少。","icon":"☕"},{"name":"翡翠柠檬（1點點）","type":"果茶","tags":[],"reason":"柠檬绿茶，清爽。","icon":"🍋"},{"name":"柠檬蜜（1點點）","type":"果茶","tags":[],"reason":"蜂蜜柠檬，酸甜。","icon":"🍋"},{"name":"葡萄柚绿（1點點）","type":"果茶","tags":[],"reason":"西柚+绿茶，微苦。","icon":"🍊"},{"name":"养乐多绿（1點點）","type":"奶茶","tags":["乳制品"],"reason":"养乐多+绿茶，酸甜。","icon":"🥛"},{"name":"8冰茶（1點點）","type":"果茶","tags":["酸"],"reason":"咸柠8冰茶，奇特。","icon":"🍋"},{"name":"红茶玛奇朵（1點點）","type":"芝士茶","tags":["乳制品"],"reason":"红茶+奶盖玛奇朵。","icon":"🧋"},{"name":"燕麦奶茶（1點點）","type":"奶茶","tags":["乳制品","素食"],"reason":"燕麦奶+茶，植物奶。","icon":"🌾"},{"name":"波霸抹茶拿铁（1點點）","type":"奶茶","tags":["乳制品"],"reason":"抹茶+波霸，日式风。","icon":"🍵"},{"name":"迷你杯波霸（1點點）","type":"奶茶","tags":["乳制品"],"reason":"小杯波霸奶茶，解馋。","icon":"🧋"},{"name":"珍珠奶茶（CoCo）（CoCo都可）","type":"奶茶","tags":["乳制品"],"reason":"CoCo珍珠奶茶，经典。","icon":"🧋"},{"name":"CoCo奶茶三兄弟（CoCo都可）","type":"奶茶","tags":["乳制品"],"reason":"珍珠+仙草+布丁大集合。","icon":"🧋"},{"name":"鲜百香双响炮（CoCo都可）","type":"果茶","tags":[],"reason":"百香果+珍珠椰果，招牌。","icon":"🥭"},{"name":"芒果绿茶（CoCo都可）","type":"果茶","tags":[],"reason":"芒果+绿茶，果味清新。","icon":"🥭"},{"name":"柠檬霸（CoCo都可）","type":"果茶","tags":[],"reason":"整颗柠檬，霸气解腻。","icon":"🍋"},{"name":"红果小姐（CoCo都可）","type":"果茶","tags":[],"reason":"山楂+蔓越莓，酸甜。","icon":"🍒"},{"name":"CoCo巧克力（CoCo都可）","type":"热饮","tags":["乳制品"],"reason":"热巧克力，冬日暖身。","icon":"🍫"},{"name":"CoCo咖啡（CoCo都可）","type":"咖啡","tags":[],"reason":"CoCo美式咖啡。","icon":"☕"},{"name":"青稞奶茶（CoCo都可）","type":"奶茶","tags":["乳制品"],"reason":"青稞Q弹，独特口感。","icon":"🌾"},{"name":"鲜芋青稞牛奶（CoCo都可）","type":"奶茶","tags":["乳制品"],"reason":"芋头+青稞+牛奶，香糯。","icon":"🥛"},{"name":"双响炮（大杯）（CoCo都可）","type":"果茶","tags":[],"reason":"百香双响炮大杯装。","icon":"🥭"},{"name":"莓莓果茶（CoCo都可）","type":"果茶","tags":[],"reason":"草莓果茶，酸甜。","icon":"🍓"},{"name":"桃气泡泡（CoCo都可）","type":"果茶","tags":[],"reason":"桃子气泡饮，清爽。","icon":"🍑"},{"name":"星空葡萄（CoCo都可）","type":"果茶","tags":[],"reason":"葡萄果茶，分层好看。","icon":"🍇"},{"name":"奶茶三兄弟大杯（CoCo都可）","type":"奶茶","tags":["乳制品"],"reason":"三兄弟加倍满足。","icon":"🧋"},{"name":"法式奶霜红茶（CoCo都可）","type":"芝士茶","tags":["乳制品"],"reason":"奶霜盖红茶，法式。","icon":"🧋"},{"name":"法式奶霜绿茶（CoCo都可）","type":"芝士茶","tags":["乳制品"],"reason":"奶霜盖绿茶。","icon":"🍵"},{"name":"焦糖奶茶（CoCo）（CoCo都可）","type":"奶茶","tags":["乳制品"],"reason":"焦糖风味。","icon":"🧋"},{"name":"布丁奶茶（CoCo都可）","type":"奶茶","tags":["乳制品"],"reason":"嫩滑布丁配奶茶。","icon":"🧋"},{"name":"仙草冻奶茶（CoCo都可）","type":"奶茶","tags":["乳制品"],"reason":"清凉仙草冻。","icon":"🧋"},{"name":"杨枝甘露（茶百道）（茶百道）","type":"果茶","tags":["乳制品"],"reason":"茶百道版杨枝甘露，招牌。","icon":"🥭"},{"name":"豆乳玉麒麟（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"豆乳奶盖+奶茶，创新。","icon":"🧋"},{"name":"奥利奥奶茶（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"奥利奥碎+奶茶，香甜。","icon":"🍪"},{"name":"西瓜啵啵（茶百道）","type":"果茶","tags":[],"reason":"西瓜汁+啵啵，夏日解渴。","icon":"🍉"},{"name":"手捣芋头绿茶（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"真芋泥+绿茶，香糯。","icon":"🥛"},{"name":"手捣芋头红茶（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"真芋泥+红茶。","icon":"🥛"},{"name":"茉莉奶绿（茶百道）（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"茉莉绿茶+奶，清新。","icon":"🍵"},{"name":"桂花毛峰（茶百道）","type":"纯茶","tags":[],"reason":"桂花+绿茶，清香。","icon":"🍵"},{"name":"血糯米奶茶（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"血糯米+奶茶，有嚼劲。","icon":"🌾"},{"name":"招牌芋圆奶茶（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"Q弹芋圆招牌款。","icon":"🧋"},{"name":"西瓜波波冰（茶百道）","type":"果茶","tags":[],"reason":"冰沙西瓜+啵啵。","icon":"🍉"},{"name":"超级杯水果茶（茶百道）","type":"果茶","tags":[],"reason":"超多水果，一大桶。","icon":"🍹"},{"name":"草莓奶冻（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"草莓+奶冻，少女心。","icon":"🍓"},{"name":"芒芒生打椰（茶百道）","type":"果茶","tags":["乳制品"],"reason":"芒果+生椰乳，椰香。","icon":"🥭"},{"name":"生椰西瓜（茶百道）","type":"果茶","tags":[],"reason":"西瓜+椰乳，清爽。","icon":"🍉"},{"name":"豆乳米麻薯（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"豆乳+麻薯，拉丝。","icon":"🧋"},{"name":"老红糖珍珠奶茶（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"老红糖珍珠，怀旧。","icon":"🧋"},{"name":"青提茉莉（茶百道）","type":"果茶","tags":[],"reason":"青提+茉莉茶，清香。","icon":"🍇"},{"name":"黄金椰椰乌龙（茶百道）","type":"奶茶","tags":["乳制品"],"reason":"椰子+乌龙奶茶。","icon":"🥥"},{"name":"元气鲜橙（茶百道）","type":"果茶","tags":[],"reason":"鲜橙果茶，维C满满。","icon":"🍊"},{"name":"龙井香奶茶（古茗）","type":"奶茶","tags":["乳制品"],"reason":"龙井茶香奶茶，独特。","icon":"🍵"},{"name":"云深幽兰（古茗）","type":"奶茶","tags":["乳制品"],"reason":"幽兰茶香奶茶。","icon":"🧋"},{"name":"青柠半熟芝士（古茗）","type":"果茶","tags":["乳制品"],"reason":"青柠+半熟芝士奶盖。","icon":"🍋"},{"name":"布蕾脆脆奶芙（古茗）","type":"奶茶","tags":["乳制品"],"reason":"焦糖布蕾+奶油顶+脆粒。","icon":"🍮"},{"name":"海盐百香金凤梨（古茗）","type":"果茶","tags":[],"reason":"百香果+凤梨，海盐。","icon":"🍍"},{"name":"红果小姐姐（古茗）","type":"果茶","tags":[],"reason":"红心火龙果+酸奶，好看。","icon":"🍓"},{"name":"大叔奶茶（古茗）","type":"奶茶","tags":["乳制品"],"reason":"古茗招牌大叔奶茶，黑糖。","icon":"🧋"},{"name":"古茗珍珠奶茶（古茗）","type":"奶茶","tags":["乳制品"],"reason":"经典珍珠奶茶。","icon":"🧋"},{"name":"芝士莓莓（古茗）（古茗）","type":"果茶","tags":["乳制品"],"reason":"草莓+芝士奶盖。","icon":"🍓"},{"name":"芝士葡萄（古茗）（古茗）","type":"果茶","tags":["乳制品"],"reason":"葡萄+芝士奶盖。","icon":"🍇"},{"name":"生椰拿铁（古茗）（古茗）","type":"咖啡","tags":["乳制品"],"reason":"生椰拿铁，古茗版。","icon":"☕"},{"name":"西瓜椰椰（古茗）","type":"果茶","tags":[],"reason":"西瓜+椰乳，夏日。","icon":"🍉"},{"name":"牛油果拿铁（古茗）","type":"咖啡","tags":["乳制品"],"reason":"牛油果+拿铁，新潮。","icon":"🥑"},{"name":"百香双重奏（古茗）","type":"果茶","tags":[],"reason":"百香果双响炮风格。","icon":"🥭"},{"name":"古茗奶绿（古茗）","type":"奶茶","tags":["乳制品"],"reason":"清新奶绿。","icon":"🧋"},{"name":"古茗烤奶（古茗）","type":"奶茶","tags":["乳制品"],"reason":"烤奶风味，焦糖香。","icon":"🧋"},{"name":"葡萄芋圆冻冻（古茗）","type":"果茶","tags":[],"reason":"葡萄+芋圆+冻冻，Q弹。","icon":"🍇"},{"name":"哈斯牛油果奶昔（古茗）","type":"奶昔","tags":["乳制品"],"reason":"牛油果奶昔，健康。","icon":"🥑"},{"name":"嫩仙草满福（古茗）","type":"仙草","tags":["乳制品"],"reason":"满满仙草+小料。","icon":"🧋"},{"name":"古茗布丁奶茶（古茗）","type":"奶茶","tags":["乳制品"],"reason":"布丁奶茶经典款。","icon":"🧋"},{"name":"书亦烧仙草（书亦烧仙草）","type":"仙草","tags":["乳制品"],"reason":"半杯都是料！招牌烧仙草。","icon":"🧋"},{"name":"杨枝甘露烧仙草（书亦烧仙草）","type":"果茶","tags":["乳制品"],"reason":"杨枝甘露+烧仙草。","icon":"🥭"},{"name":"葡萄芋圆仙草（书亦烧仙草）","type":"仙草","tags":["乳制品"],"reason":"葡萄+芋圆+仙草。","icon":"🍇"},{"name":"书亦牛魔王黑砖（书亦烧仙草）","type":"奶茶","tags":["乳制品"],"reason":"黑砖冻+奶茶，招牌。","icon":"🧋"},{"name":"小芋圆烧仙草（书亦烧仙草）","type":"仙草","tags":["乳制品"],"reason":"小芋圆仙草，Q弹。","icon":"🧋"},{"name":"书亦珍珠奶茶（书亦烧仙草）","type":"奶茶","tags":["乳制品"],"reason":"经典珍珠奶茶。","icon":"🧋"},{"name":"金桔柠檬（书亦烧仙草）","type":"果茶","tags":[],"reason":"金桔柠檬，清爽解腻。","icon":"🍋"},{"name":"芒果布丁奶茶（书亦烧仙草）","type":"奶茶","tags":["乳制品"],"reason":"芒果布丁+奶茶。","icon":"🥭"},{"name":"书亦酸奶水果捞（书亦烧仙草）","type":"酸奶","tags":["乳制品"],"reason":"酸奶+水果，健康。","icon":"🥣"},{"name":"生椰烧仙草（书亦烧仙草）","type":"仙草","tags":["乳制品"],"reason":"椰乳+烧仙草，新风味。","icon":"🥥"},{"name":"生椰桑葚莓莓（书亦烧仙草）","type":"果茶","tags":[],"reason":"桑葚+草莓+椰乳。","icon":"🍓"},{"name":"刺梨柠檬茶（书亦烧仙草）","type":"果茶","tags":[],"reason":"刺梨+柠檬，维C王。","icon":"🍋"},{"name":"橙漫山茶花（书亦烧仙草）","type":"果茶","tags":[],"reason":"橙子+山茶花香茶底。","icon":"🍊"},{"name":"书亦奶茶大满贯（书亦烧仙草）","type":"奶茶","tags":["乳制品"],"reason":"全料大满贯，半杯料。","icon":"🧋"},{"name":"薄荷奶绿（书亦烧仙草）","type":"奶茶","tags":["乳制品"],"reason":"薄荷奶绿，清凉。","icon":"🌿"},{"name":"益禾烤奶（益禾堂）","type":"奶茶","tags":["乳制品"],"reason":"益禾堂招牌烤奶，焦糖香。","icon":"🧋"},{"name":"泷珠奶茶（益禾堂）","type":"奶茶","tags":["乳制品"],"reason":"泷珠（珍珠）奶茶。","icon":"🧋"},{"name":"蜜桃乌龙（益禾堂）","type":"果茶","tags":[],"reason":"蜜桃+乌龙茶，清香。","icon":"🍑"},{"name":"西瓜汁（益禾堂）","type":"果茶","tags":[],"reason":"鲜榨西瓜汁，清爽。","icon":"🍉"},{"name":"柠檬蜂蜜茶（益禾堂）","type":"果茶","tags":[],"reason":"蜂蜜柠檬，润。","icon":"🍋"},{"name":"益禾可可（益禾堂）","type":"热饮","tags":["乳制品"],"reason":"热可可，暖身。","icon":"🍫"},{"name":"益禾咖啡（益禾堂）","type":"咖啡","tags":[],"reason":"益禾堂平价咖啡。","icon":"☕"},{"name":"禾风奶绿（益禾堂）","type":"奶茶","tags":["乳制品"],"reason":"奶绿清新款。","icon":"🍵"},{"name":"芋泥啵啵奶（益禾堂）","type":"奶茶","tags":["乳制品"],"reason":"芋泥+啵啵+牛奶。","icon":"🥛"},{"name":"益禾堂杨枝甘露（益禾堂）","type":"果茶","tags":["乳制品"],"reason":"平价版杨枝甘露。","icon":"🥭"},{"name":"薄荷柠檬水（益禾堂）","type":"果茶","tags":[],"reason":"薄荷柠檬，超解暑。","icon":"🍋"},{"name":"翠峰茉莉（益禾堂）","type":"纯茶","tags":[],"reason":"茉莉花茶，清爽。","icon":"🍵"},{"name":"禾堂奶绿（益禾堂）","type":"奶茶","tags":["乳制品"],"reason":"招牌奶绿。","icon":"🧋"},{"name":"黑糖泷珠奶（益禾堂）","type":"奶茶","tags":["乳制品"],"reason":"黑糖珍珠鲜奶。","icon":"🧋"},{"name":"焦糖烤奶（益禾堂）","type":"奶茶","tags":["乳制品"],"reason":"焦糖烤奶升级版。","icon":"🧋"},{"name":"血糯米奶茶（沪上）（沪上阿姨）","type":"奶茶","tags":["乳制品"],"reason":"血糯米+奶茶，招牌。","icon":"🌾"},{"name":"厚芋泥波波奶茶（沪上阿姨）","type":"奶茶","tags":["乳制品"],"reason":"厚芋泥+波波，糯。","icon":"🥛"},{"name":"杨枝甘露（沪上）（沪上阿姨）","type":"果茶","tags":["乳制品"],"reason":"沪上版杨枝甘露。","icon":"🥭"},{"name":"草莓大福（沪上阿姨）","type":"奶茶","tags":["乳制品"],"reason":"草莓+麻薯+奶，大福感。","icon":"🍓"},{"name":"葡萄酸奶（沪上阿姨）","type":"酸奶","tags":["乳制品"],"reason":"葡萄+酸奶，酸甜。","icon":"🍇"},{"name":"多肉葡萄（沪上）（沪上阿姨）","type":"果茶","tags":[],"reason":"沪上版多肉葡萄。","icon":"🍇"},{"name":"桃桃蜜柚（沪上阿姨）","type":"果茶","tags":[],"reason":"桃+蜜柚，甜中微苦。","icon":"🍑"},{"name":"生椰拿铁（沪上）（沪上阿姨）","type":"咖啡","tags":["乳制品"],"reason":"生椰拿铁，平价。","icon":"☕"},{"name":"沪上阿姨奶茶（沪上阿姨）","type":"奶茶","tags":["乳制品"],"reason":"经典珍珠奶茶。","icon":"🧋"},{"name":"厚乳芋泥（沪上阿姨）","type":"奶茶","tags":["乳制品"],"reason":"厚乳+芋泥，香浓。","icon":"🥛"},{"name":"五谷杂粮奶茶（沪上阿姨）","type":"奶茶","tags":["乳制品"],"reason":"五谷杂粮磨粉，健康。","icon":"🌾"},{"name":"阿姨奶茶（沪上阿姨）","type":"奶茶","tags":["乳制品"],"reason":"经典阿姨奶茶，怀旧。","icon":"🧋"},{"name":"草莓桃桃（沪上阿姨）","type":"果茶","tags":[],"reason":"草莓+桃子双果。","icon":"🍓"},{"name":"百香果双响炮（沪上）（沪上阿姨）","type":"果茶","tags":[],"reason":"百香果双响炮。","icon":"🥭"},{"name":"厚乳拿铁（沪上阿姨）","type":"咖啡","tags":["乳制品"],"reason":"厚乳拿铁，奶味重。","icon":"☕"},{"name":"伯牙绝弦（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"招牌茉莉雪芽+牛乳，鲜奶茶。","icon":"🍵"},{"name":"青青糯山（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"糯米香茶底+牛乳。","icon":"🍵"},{"name":"桂馥兰香（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"桂花乌龙茶底+牛乳。","icon":"🍵"},{"name":"花田乌龙（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"白桃乌龙+牛乳，果香茶。","icon":"🍵"},{"name":"寻香山茶（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"山茶花香茶底+牛乳。","icon":"🌺"},{"name":"万里木兰（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"祁门红茶+牛乳，茶感重。","icon":"🍵"},{"name":"伯牙绝弦（桂子飘飘）（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"伯牙绝弦+奶油顶+桂花。","icon":"🍵"},{"name":"去云南·玫瑰普洱（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"玫瑰普洱+牛乳，云南味。","icon":"🌹"},{"name":"千山雪·金丝小种（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"红茶底+奶油顶。","icon":"🍵"},{"name":"春日桃桃（霸王茶姬）","type":"果茶","tags":["乳制品"],"reason":"桃子+奶油顶，粉嫩。","icon":"🍑"},{"name":"霸王茶姬柠檬茶（霸王茶姬）","type":"果茶","tags":[],"reason":"茶姬版柠檬茶。","icon":"🍋"},{"name":"桂子飘飘（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"桂花+奶油顶奶茶。","icon":"🌼"},{"name":"白雾红尘（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"大红袍茶底+牛乳，浓香。","icon":"🍵"},{"name":"花西子联名款（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"联名款奶茶，限定。","icon":"🌺"},{"name":"伯牙绝弦（少糖）（霸王茶姬）","type":"奶茶","tags":["乳制品"],"reason":"伯牙绝弦少糖版，清爽。","icon":"🍵"},{"name":"幽兰拿铁（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"茶颜招牌，锡兰红茶+奶油+碧根果。","icon":"🍵"},{"name":"声声乌龙（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"蜜桃乌龙茶底+奶，清新。","icon":"🍑"},{"name":"芊芊马卡龙（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"红茶+奶+马卡龙碎，少女。","icon":"🍪"},{"name":"抹茶菩提（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"抹茶+奶+葡萄干，禅意。","icon":"🍵"},{"name":"桂花弄（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"桂花乌龙茶底+奶。","icon":"🌼"},{"name":"烟火易冷（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"武夷岩茶底+奶，炭火香。","icon":"🔥"},{"name":"素颜锡兰（茶颜悦色）","type":"纯茶","tags":[],"reason":"纯锡兰红茶，无糖。","icon":"🍵"},{"name":"筝筝纸鸢（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"茉香绿茶底+奶，清爽。","icon":"🪁"},{"name":"风栖绿桂（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"茉香绿茶+奶盖。","icon":"🍵"},{"name":"蔓越阑珊（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"蔓越莓+奶，酸甜。","icon":"🍒"},{"name":"人间烟火（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"大红袍+奶油+开心果碎。","icon":"🔥"},{"name":"浮生半日（茶颜悦色）","type":"纯茶","tags":[],"reason":"半日闲茶，清茶一杯。","icon":"🍵"},{"name":"栀子生椰（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"栀子花茶+椰乳，创新。","icon":"🥥"},{"name":"幽兰拿铁（少奶油）（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"幽兰拿铁减奶油版。","icon":"🍵"},{"name":"少年时（茶颜悦色）","type":"奶茶","tags":["乳制品"],"reason":"绿茶底+奶，青春感。","icon":"🍵"},{"name":"脏脏茶（乐乐茶）","type":"奶茶","tags":["乳制品"],"reason":"黑糖珍珠脏脏茶，网红。","icon":"🧋"},{"name":"草莓桃子酪酪（乐乐茶）","type":"果茶","tags":["乳制品"],"reason":"草莓+桃子+酸奶酪酪。","icon":"🍓"},{"name":"葡萄酪酪（乐乐茶）","type":"果茶","tags":["乳制品"],"reason":"葡萄+酸奶酪酪。","icon":"🍇"},{"name":"芒果酪酪（乐乐茶）","type":"果茶","tags":["乳制品"],"reason":"芒果+酸奶酪酪。","icon":"🥭"},{"name":"榴莲乳酪面包+奶茶（乐乐茶）","type":"奶茶","tags":["乳制品"],"reason":"搭配乐乐茶乳酪包。","icon":"🧆"},{"name":"乐乐茶珍珠奶茶（乐乐茶）","type":"奶茶","tags":["乳制品"],"reason":"经典珍珠奶茶。","icon":"🧋"},{"name":"生椰乳茶（乐乐茶）","type":"奶茶","tags":["乳制品"],"reason":"生椰乳+茶底。","icon":"🥥"},{"name":"西瓜酪酪（乐乐茶）","type":"果茶","tags":["乳制品"],"reason":"西瓜+酸奶酪酪，夏日。","icon":"🍉"},{"name":"车厘子酪酪（乐乐茶）","type":"果茶","tags":["乳制品"],"reason":"车厘子+酸奶酪酪，高级。","icon":"🍒"},{"name":"荔枝酪酪（乐乐茶）","type":"果茶","tags":["乳制品"],"reason":"荔枝+酸奶酪酪，清甜。","icon":"🍒"},{"name":"乐乐茶冰粉（乐乐茶）","type":"果茶","tags":[],"reason":"四川冰粉款奶茶。","icon":"🍮"},{"name":"黑糖波霸（乐乐茶）","type":"奶茶","tags":["乳制品"],"reason":"黑糖波霸鲜奶。","icon":"🧋"},{"name":"草莓蛋糕奶茶（乐乐茶）","type":"奶茶","tags":["乳制品"],"reason":"草莓+奶油蛋糕酱，甜。","icon":"🍰"},{"name":"牛油果乳酪茶（乐乐茶）","type":"果茶","tags":["乳制品"],"reason":"牛油果+乳酪，新潮。","icon":"🥑"},{"name":"椰香奶茶（乐乐茶）","type":"奶茶","tags":["乳制品"],"reason":"椰香浓郁款。","icon":"🥥"},{"name":"杨枝甘露（7分甜）（7分甜）","type":"果茶","tags":["乳制品"],"reason":"7分甜招牌杨枝甘露，芒果西米。","icon":"🥭"},{"name":"芒果西米露（7分甜）","type":"果茶","tags":["乳制品"],"reason":"经典芒果西米露。","icon":"🥭"},{"name":"蜜桃乌龙（7分）（7分甜）","type":"果茶","tags":[],"reason":"蜜桃乌龙茶。","icon":"🍑"},{"name":"葡萄甘露（7分甜）","type":"果茶","tags":["乳制品"],"reason":"葡萄杨枝甘露版。","icon":"🍇"},{"name":"草莓甘露（7分甜）","type":"果茶","tags":["乳制品"],"reason":"草莓杨枝甘露。","icon":"🍓"},{"name":"杨枝甘露椰奶版（7分甜）","type":"果茶","tags":["乳制品"],"reason":"椰奶版杨枝甘露。","icon":"🥭"},{"name":"杨枝甘露酸奶版（7分甜）","type":"酸奶","tags":["乳制品"],"reason":"酸奶版杨枝甘露。","icon":"🥭"},{"name":"7分甜奶茶（7分甜）","type":"奶茶","tags":["乳制品"],"reason":"经典珍珠奶茶。","icon":"🧋"},{"name":"绿豆沙牛乳（7分甜）","type":"奶茶","tags":["乳制品"],"reason":"绿豆沙+牛乳，夏日解暑。","icon":"🫘"},{"name":"红豆沙牛乳（7分甜）","type":"奶茶","tags":["乳制品"],"reason":"红豆沙+牛乳，暖。","icon":"🫘"},{"name":"奥利奥冰冰乐（7分甜）","type":"冰沙","tags":["乳制品"],"reason":"奥利奥冰沙，甜。","icon":"🍪"},{"name":"芒椰小丸子（7分甜）","type":"果茶","tags":["乳制品"],"reason":"芒果+椰奶+小丸子。","icon":"🥭"},{"name":"生椰杨枝甘露（7分甜）","type":"果茶","tags":["乳制品"],"reason":"生椰版杨枝甘露。","icon":"🥥"},{"name":"蓝莓珍珠酸奶（7分甜）","type":"酸奶","tags":["乳制品"],"reason":"蓝莓珍珠酸奶。","icon":"🫐"},{"name":"7分甜柠檬水（7分甜）","type":"果茶","tags":[],"reason":"柠檬水，解渴。","icon":"🍋"},{"name":"生椰拿铁（瑞幸）（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"瑞幸封神之作，椰香拿铁。","icon":"☕"},{"name":"丝绒拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"丝滑厚乳拿铁，甜。","icon":"☕"},{"name":"厚乳拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"厚乳版本，奶浓。","icon":"☕"},{"name":"陨石拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"黑糖+寒天+拿铁，嚼得到。","icon":"☕"},{"name":"生酪拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"生芝士风味拿铁，浓。","icon":"☕"},{"name":"美式（瑞幸）（瑞幸）","type":"咖啡","tags":[],"reason":"经典冰/热美式，醒神。","icon":"☕"},{"name":"橙C美式（瑞幸）","type":"咖啡","tags":[],"reason":"橙汁+美式，酸甜苦。","icon":"🍊"},{"name":"柚C美式（瑞幸）","type":"咖啡","tags":[],"reason":"西柚汁+美式，微苦。","icon":"🍊"},{"name":"葡萄冰萃美式（瑞幸）","type":"咖啡","tags":[],"reason":"葡萄汁+冰美式，夏日。","icon":"🍇"},{"name":"抹茶拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"抹茶+牛奶，无咖啡。","icon":"🍵"},{"name":"珞珈樱花拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"樱花季限定，粉嫩。","icon":"🌸"},{"name":"碧螺知春拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"碧螺春茶+咖啡，茶咖。","icon":"🍵"},{"name":"茉莉花香拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"茉莉花茶+咖啡，清新。","icon":"🍵"},{"name":"桂花龙井拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"桂花+龙井+咖啡，秋味。","icon":"🌼"},{"name":"酱香拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"茅台联名，白酒风味。","icon":"🍶"},{"name":"太妃榛香拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"冬日限定，太妃糖香。","icon":"🍬"},{"name":"冲绳黑糖拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"黑糖味拿铁。","icon":"☕"},{"name":"冰吸生椰拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"生椰+薄荷冰感，凉。","icon":"🧊"},{"name":"精粹澳白（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"澳白咖啡，奶泡薄。","icon":"☕"},{"name":"卡布奇诺（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"经典卡布奇诺，奶泡厚。","icon":"☕"},{"name":"焦糖玛奇朵（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"焦糖玛奇朵，甜。","icon":"☕"},{"name":"摩卡（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"巧克力咖啡，甜。","icon":"🍫"},{"name":"香草拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"香草风味拿铁。","icon":"☕"},{"name":"榛果拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"榛果风味拿铁。","icon":"☕"},{"name":"抹茶瑞纳冰（瑞幸）","type":"冰沙","tags":["乳制品"],"reason":"抹茶冰沙，甜。","icon":"🍵"},{"name":"卡美罗焦糖拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"焦糖卡美罗拿铁，香甜。","icon":"🍯"},{"name":"马斯卡彭生酪拿铁（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"马斯卡彭芝士拿铁，浓。","icon":"🧀"},{"name":"拿铁（瑞幸）（瑞幸）","type":"咖啡","tags":["乳制品"],"reason":"瑞幸经典拿铁。","icon":"☕"},{"name":"拿铁（星爸爸）（星巴克）","type":"咖啡","tags":["乳制品"],"reason":"星巴克经典拿铁。","icon":"☕"},{"name":"美式（星巴克）（星巴克）","type":"咖啡","tags":[],"reason":"星巴克美式咖啡。","icon":"☕"},{"name":"卡布奇诺（星）（星巴克）","type":"咖啡","tags":["乳制品"],"reason":"意式卡布奇诺。","icon":"☕"},{"name":"焦糖玛奇朵（星）（星巴克）","type":"咖啡","tags":["乳制品"],"reason":"焦糖玛奇朵，星版。","icon":"☕"},{"name":"摩卡（星）（星巴克）","type":"咖啡","tags":["乳制品"],"reason":"巧克力摩卡。","icon":"🍫"},{"name":"馥芮白（星巴克）","type":"咖啡","tags":["乳制品"],"reason":"Flat White，奶泡细腻。","icon":"☕"},{"name":"星冰乐（焦糖）（星巴克）","type":"冰沙","tags":["乳制品"],"reason":"焦糖星冰乐，冰沙甜。","icon":"🍧"},{"name":"星冰乐（抹茶）（星巴克）","type":"冰沙","tags":["乳制品"],"reason":"抹茶星冰乐。","icon":"🍵"},{"name":"星冰乐（摩卡）（星巴克）","type":"冰沙","tags":["乳制品"],"reason":"摩卡星冰乐。","icon":"🍫"},{"name":"星冰乐（香草）（星巴克）","type":"冰沙","tags":["乳制品"],"reason":"香草星冰乐。","icon":"🍦"},{"name":"香草拿铁（星）（星巴克）","type":"咖啡","tags":["乳制品"],"reason":"香草拿铁。","icon":"☕"},{"name":"榛果拿铁（星）（星巴克）","type":"咖啡","tags":["乳制品"],"reason":"榛果拿铁。","icon":"☕"},{"name":"燕麦拿铁（星巴克）","type":"咖啡","tags":["素食"],"reason":"燕麦奶拿铁，植物基。","icon":"🌾"},{"name":"冷萃咖啡（星巴克）","type":"咖啡","tags":[],"reason":"慢萃冷泡咖啡，顺滑。","icon":"☕"},{"name":"氮气冷萃（星巴克）","type":"咖啡","tags":[],"reason":"氮气冷萃，绵密泡沫。","icon":"☕"},{"name":"抹茶拿铁（星）（星巴克）","type":"咖啡","tags":["乳制品"],"reason":"星巴克抹茶拿铁。","icon":"🍵"},{"name":"红茶拿铁（星）（星巴克）","type":"奶茶","tags":["乳制品"],"reason":"英式红茶拿铁。","icon":"☕"},{"name":"热巧克力（星）（星巴克）","type":"热饮","tags":["乳制品"],"reason":"经典热可可。","icon":"🍫"},{"name":"桃花拿铁（星巴克）","type":"咖啡","tags":["乳制品"],"reason":"春季桃花限定。","icon":"🌸"},{"name":"桂花绵云拿铁（星巴克）","type":"咖啡","tags":["乳制品"],"reason":"桂花燕麦奶盖拿铁。","icon":"🌼"},{"name":"甜啦啦柠檬水（其他品牌）","type":"果茶","tags":[],"reason":"甜啦啦大杯柠檬水，性价比。","icon":"🍋"},{"name":"甜啦啦黑糖珍珠（其他品牌）","type":"奶茶","tags":["乳制品"],"reason":"黑糖珍珠奶茶。","icon":"🧋"},{"name":"茶屿黑糖珍珠（其他品牌）","type":"奶茶","tags":["乳制品"],"reason":"茶屿招牌黑糖珍珠。","icon":"🧋"},{"name":"贡茶珍珠奶茶（其他品牌）","type":"奶茶","tags":["乳制品"],"reason":"贡茶经典珍珠奶盖。","icon":"🧋"},{"name":"KOI黄金珍奶（其他品牌）","type":"奶茶","tags":["乳制品"],"reason":"KOI招牌黄金珍珠奶茶。","icon":"🧋"},{"name":"快乐番薯烤红薯+奶茶（其他品牌）","type":"奶茶","tags":["乳制品"],"reason":"番薯+奶茶，组合。","icon":"🍠"},{"name":"新作之茶水果茶（其他品牌）","type":"果茶","tags":[],"reason":"新作之茶超级水果茶。","icon":"🍹"},{"name":"快乐番薯紫薯奶茶（其他品牌）","type":"奶茶","tags":["乳制品"],"reason":"紫薯泥奶茶，颜色好看。","icon":"🫐"},{"name":"KOI饼干奶茶（其他品牌）","type":"奶茶","tags":["乳制品"],"reason":"饼干碎奶茶，香甜。","icon":"🍪"},{"name":"贡茶奶盖红茶（其他品牌）","type":"芝士茶","tags":["乳制品"],"reason":"贡茶经典奶盖。","icon":"🧋"},{"name":"甜啦啦酸奶水果捞（其他品牌）","type":"酸奶","tags":["乳制品"],"reason":"甜啦啦酸奶杯。","icon":"🥣"},{"name":"甜啦啦满杯百香果（其他品牌）","type":"果茶","tags":[],"reason":"百香果水果茶。","icon":"🥭"},{"name":"茉莉绿茶（任意）（其他品牌）","type":"纯茶","tags":[],"reason":"茉莉花茶，清香无糖。","icon":"🍵"},{"name":"乌龙茶（任意）（其他品牌）","type":"纯茶","tags":[],"reason":"乌龙茶，半发酵，回甘。","icon":"🍵"},{"name":"红茶（任意）（其他品牌）","type":"纯茶","tags":[],"reason":"正山小种/祁门红茶，暖。","icon":"🍵"},{"name":"绿茶（任意）（其他品牌）","type":"纯茶","tags":[],"reason":"龙井/碧螺春等绿茶，清。","icon":"🍵"},{"name":"桂花乌龙（其他品牌）","type":"纯茶","tags":[],"reason":"桂花+乌龙，秋天味道。","icon":"🌼"},{"name":"菊花枸杞茶（其他品牌）","type":"热饮","tags":[],"reason":"明目养生，适合熬夜党。","icon":"🌼"},{"name":"柠檬红茶（其他品牌）","type":"果茶","tags":[],"reason":"柠檬+红茶，经典港风。","icon":"🍋"},{"name":"柠檬绿茶（其他品牌）","type":"果茶","tags":[],"reason":"柠檬+绿茶，清新。","icon":"🍋"},{"name":"蜂蜜柚子茶（其他品牌）","type":"热饮","tags":[],"reason":"韩式柚子茶，酸甜润。","icon":"🫖"},{"name":"红枣姜茶（其他品牌）","type":"热饮","tags":[],"reason":"姜母茶，冬天暖身。","icon":"🫖"},{"name":"热牛奶（其他品牌）","type":"健康饮品","tags":["乳制品"],"reason":"纯热牛奶，助眠。","icon":"🥛"},{"name":"豆浆（热）（其他品牌）","type":"健康饮品","tags":["素食"],"reason":"现磨豆浆，早餐。","icon":"🥛"},{"name":"可乐（其他品牌）","type":"汽水","tags":[],"reason":"偶尔来一杯，快乐加倍。","icon":"🥤"},{"name":"雪碧（其他品牌）","type":"汽水","tags":[],"reason":"清爽柠檬汽水。","icon":"🥤"},{"name":"气泡水（其他品牌）","type":"健康饮品","tags":[],"reason":"零卡气泡水，清爽。","icon":"🫧"},{"name":"矿泉水（其他品牌）","type":"健康饮品","tags":[],"reason":"白开水，最健康。","icon":"💧"}];
+// === 自动补全饮品标签：根据类型和名称推断 ===
+(function(){
+  const dairyTypes = ['奶茶','奶昔','酸奶','芝士茶','仙草','冰沙','冰淇淋','热饮'];
+  drinks.forEach(d => {
+    // 根据类型加乳制品标签
+    if (dairyTypes.includes(d.type) && !d.tags.includes('乳制品')) d.tags.push('乳制品');
+    // 咖啡类：含"拿铁/卡布/摩卡/玛奇朵/澳白/馥芮/星冰乐/生椰/丝绒/厚乳"的有乳制品
+    if (d.type === '咖啡') {
+      const milkKW = ['拿铁','卡布','摩卡','玛奇朵','澳白','馥芮','星冰乐','生椰','丝绒','厚乳','奶','瑞纳冰'];
+      if (milkKW.some(k=>d.name.includes(k)) && !d.tags.includes('乳制品')) d.tags.push('乳制品');
+    }
+    // 果茶：名字含"芝士/酪酪/奶盖/奶昔/酸奶/椰奶/奶冻/生椰/牛乳/奶"的有乳制品
+    if (d.type === '果茶') {
+      const milkKW = ['芝士','酪酪','奶盖','酸奶','椰奶','奶冻','生椰','牛乳','牛奶','奶昔','奶芙'];
+      if (milkKW.some(k=>d.name.includes(k)) && !d.tags.includes('乳制品')) d.tags.push('乳制品');
+    }
+    // 咖啡类型标签
+    if (d.type === '咖啡' && !d.tags.includes('咖啡')) d.tags.push('咖啡');
+  });
+})();
+
+
+// === 自动补全晚餐标签 ===
+(function(){
+  const dinnerTypes = ['麻辣','其他'];
+  const dinnerKW = ['火锅','烧烤','烤肉','烤鱼','打边炉','聚餐','居酒屋','串串','大盘鸡','鸡公煲','美蛙','锅','煲','烤','整只','肋排','寿喜烧','部队锅'];
+  baseFoods.forEach(f => {
+    if (dinnerTypes.includes(f.type) && !f.tags.includes('晚餐')) f.tags.push('晚餐');
+    if (dinnerKW.some(k=>f.name.includes(k)) && !f.tags.includes('晚餐')) f.tags.push('晚餐');
+  });
+})();
+
+// === 状态 ===
+let custom = JSON.parse(localStorage.getItem('lunch-lottery-custom') || '[]');
+let history = JSON.parse(localStorage.getItem('lunch-lottery-history') || '[]');
+let lastFoodCandidates = [];
+let lastDrinkCandidates = [];
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+// === Chip 选择 ===
+$$('.chip').forEach(b => b.addEventListener('click', () => b.classList.toggle('active')));
+    const selectedDrink = () => $$('#drinkAvoids .chip.active').map(b => b.dataset.dtag);
+
+const selected = id => $$('#' + id + ' .chip.active').map(b => b.dataset.tag);
+
+// === 结果渲染（保留操作按钮） ===
+function showResult(target, item, label) {
+  const r = $(target);
+  r.classList.remove('pop', 'rolling');
+  void r.offsetWidth;
+  r.classList.add('pop');
+  const isDrink = target === '#drinkResult';
+  r.innerHTML =
+    '<div class="food-icon">' + (item.icon || '🍽️') + '</div>' +
+    '<div class="food-name">' + item.name + '</div>' +
+    '<span class="food-type">' + label + ' · ' + item.type + '</span>' +
+    '<p class="food-reason">' + (item.reason || '这是你自定义的心头好。') + '</p>' +
+    '<div class="result-actions">' +
+      '<button class="mini-btn" onclick="reroll(' + (isDrink ? "'drink'" : "'food'") + ')">🎲 换一个</button>' +
+      '<button class="mini-btn primary" onclick="accept(' + (isDrink ? "'drink'" : "'food'") + ')">👍 就它了</button>' +
+    '</div>';
+}
+
+function showEmpty(target, text) {
+  const r = $(target);
+  r.classList.remove('pop', 'rolling');
+  r.innerHTML = '<div class="empty">' + text + '</div>';
+}
+
+function showRolling(target) {
+  const r = $(target);
+  r.classList.remove('pop');
+  r.classList.add('rolling');
+  r.innerHTML = '<div class="food-icon">🎲</div><div class="food-name">…</div><span class="food-type">抽取中…</span>';
+}
+
+// === 抽签核心 ===
+function getFoodCandidates() {
+  const likes = selected('likes');
+  const avoids = selected('avoids');
+  const all = [...baseFoods, ...custom];
+  let candidates = all.filter(f => !avoids.some(tag => f.tags.includes(tag)));
+  if (avoids.includes('只吃素')) candidates = candidates.filter(f => f.tags.includes('素食'));
+  if (likes.length) {
+    const matching = candidates.filter(f => likes.some(tag => f.type === tag || f.tags.includes(tag)));
+    if (matching.length) candidates = matching;
+  }
+  return candidates;
+}
+
+function getDrinkCandidates() {
+  const avoids = selected('avoids');
+  const dAvds = selectedDrink();
+  return drinks.filter(d => {
+    if (avoids.some(tag => d.tags.includes(tag))) return false;
+    if (dAvds.includes('咖啡因') && (d.tags.includes('咖啡') || d.type === '咖啡')) return false;
+    if (dAvds.includes('茶底')) {
+      const teaTypes = ['奶茶','芝士茶','纯茶','仙草'];
+      if (teaTypes.includes(d.type)) return false;
+      const teaKW = ['奶茶','奶绿','乌龙','茉莉','绿妍','红茶','绿茶','抹茶','焙茶','龙井','碧螺春','茶马'];
+      if (teaKW.some(k=>d.name.includes(k))) return false;
+    }
+    return true;
+  });
+}
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function draw() {
+  const candidates = getFoodCandidates();
+  if (!candidates.length) {
+    $('#notice').textContent = '这些条件组合后没有合适选项，试着少选一项忌口吧。';
+    return;
+  }
+  $('#notice').textContent = '';
+  lastFoodCandidates = candidates;
+
+  // 滚动动画
+  showRolling('#result');
+  let ticks = 0;
+  const rollInterval = setInterval(() => {
+    const preview = pickRandom(candidates);
+    const r = $('#result');
+    r.querySelector('.food-icon').textContent = preview.icon || '🍽️';
+    r.querySelector('.food-name').textContent = preview.name;
+    ticks++;
+    if (ticks >= 8) {
+      clearInterval(rollInterval);
+      const f = pickRandom(candidates);
+      showResult('#result', f, '今天');
+      addHistory(f, '今日');
+      if ($('#withDrink').checked) drawDrink();
+    }
+  }, 70);
+}
+
+function drawDrink() {
+  const candidates = getDrinkCandidates();
+  if (!candidates.length) {
+    $('#notice').textContent = '饮品条件太严格啦，试着少选一项忌口吧。';
+    return false;
+  }
+  $('#notice').textContent = '';
+  lastDrinkCandidates = candidates;
+
+  showRolling('#drinkResult');
+  let ticks = 0;
+  const rollInterval = setInterval(() => {
+    const preview = pickRandom(candidates);
+    const r = $('#drinkResult');
+    r.querySelector('.food-icon').textContent = preview.icon || '🥤';
+    r.querySelector('.food-name').textContent = preview.name;
+    ticks++;
+    if (ticks >= 6) {
+      clearInterval(rollInterval);
+      const d = pickRandom(candidates);
+      showResult('#drinkResult', d, '饮品');
+    }
+  }, 70);
+  return true;
+}
+
+// === 换一个 / 就它了 ===
+function reroll(type) {
+  if (type === 'food') {
+    if (!lastFoodCandidates.length) lastFoodCandidates = getFoodCandidates();
+    if (!lastFoodCandidates.length) return;
+    const f = pickRandom(lastFoodCandidates);
+    showResult('#result', f, '今天');
+    addHistory(f, '今日');
+  } else {
+    if (!lastDrinkCandidates.length) lastDrinkCandidates = getDrinkCandidates();
+    if (!lastDrinkCandidates.length) return;
+    const d = pickRandom(lastDrinkCandidates);
+    showResult('#drinkResult', d, '饮品');
+  }
+}
+
+function accept(type) {
+  const r = $(type === 'food' ? '#result' : '#drinkResult');
+  r.querySelectorAll('.mini-btn').forEach(b => b.remove());
+  const note = document.createElement('div');
+  note.style.cssText = 'color:#508363;font-size:.95rem;margin-top:8px;';
+  note.textContent = type === 'food' ? '✅ 好，就吃这个！' : '✅ 好，就喝这个！';
+  r.appendChild(note);
+}
+
+// === 历史记录 ===
+function addHistory(item, label) {
+  history.unshift({
+    name: item.name,
+    type: item.type,
+    icon: item.icon || '🍽️',
+    label: label,
+    time: new Date().toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  });
+  if (history.length > 10) history = history.slice(0, 10);
+  localStorage.setItem('lunch-lottery-history', JSON.stringify(history));
+}
+
+function renderHistory() {
+  const list = $('#historyList');
+  if (!history.length) {
+    list.innerHTML = '<p style="color:var(--muted)">还没有记录。</p>';
+    return;
+  }
+  list.innerHTML = history.map(h =>
+    '<div class="history-item">' +
+      '<span class="hi-icon">' + h.icon + '</span>' +
+      '<div class="hi-main"><div class="hi-name">' + h.name + '</div>' +
+      '<div class="hi-meta">' + h.label + ' · ' + h.type + '</div></div>' +
+      '<span class="hi-time">' + h.time + '</span>' +
+    '</div>'
+  ).join('');
+}
+
+// === 事件绑定 ===
+$('#draw').addEventListener('click', draw);
+$('#drawDrink').addEventListener('click', drawDrink);
+$('#reset').addEventListener('click', () => {
+  $('.chip.active').forEach(b => b.classList.remove('active'));
+  $$('.drink-avoids .chip.active').forEach(b => b.classList.remove('active'));
+  $('#withDrink').checked = false;
+  showEmpty('#result', '🎲 点击上方绿色按钮，抽取你的天命食物');
+  showEmpty('#drinkResult', '🥤 勾选"同时抽取饮品"，或点粉色按钮单独抽');
+  $('#notice').textContent = '已清空本次选择。';
+  lastFoodCandidates = [];
+  lastDrinkCandidates = [];
+});
+
+// withDrink 取消勾选时重置饮品区
+$('#withDrink').addEventListener('change', e => {
+  if (!e.target.checked) {
+    showEmpty('#drinkResult', '🥤 勾选"同时抽取饮品"，或点粉色按钮单独抽');
+  }
+});
+
+// 菜单管理 dialog
+const dialog = $('#menuDialog');
+$('#manage').addEventListener('click', () => { renderCustom(); dialog.showModal(); });
+$('#closeDialog').addEventListener('click', () => dialog.close());
+
+function saveCustom() {
+  localStorage.setItem('lunch-lottery-custom', JSON.stringify(custom));
+  renderCustom();
+}
+
+function renderCustom() {
+  const list = $('#personalList');
+  list.innerHTML = custom.length ? custom.map((f, i) =>
+    '<div class="personal-item"><span>' + (f.icon || '🍽️') + ' ' + f.name + ' <small>· ' + f.type + '</small></span>' +
+    '<button type="button" data-delete="' + i + '">删除</button></div>'
+  ).join('') : '<p>还没有自定义菜品。</p>';
+  $$('[data-delete]').forEach(b => b.onclick = () => {
+    custom.splice(+b.dataset.delete, 1);
+    saveCustom();
+  });
+}
+
+$('#dishForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('#dishName').value.trim();
+  if (!name) return;
+  custom.push({
+    name: name,
+    type: $('#dishType').value,
+    tags: $('#dishTags').value.split(/[,，]/).map(x => x.trim()).filter(Boolean),
+    reason: $('#dishReason').value.trim(),
+    icon: '⭐'
+  });
+  saveCustom();
+  e.target.reset();
+});
+
+// 历史记录 dialog
+const hDialog = $('#historyDialog');
+$('#historyBtn').addEventListener('click', () => { renderHistory(); hDialog.showModal(); });
+$('#closeHistory').addEventListener('click', () => hDialog.close());
+$('#clearHistory').addEventListener('click', () => {
+  history = [];
+  localStorage.removeItem('lunch-lottery-history');
+  renderHistory();
+});
+  </script>
+</body>
+</html>
