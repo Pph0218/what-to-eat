@@ -2,13 +2,13 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
   <meta name="description" content="今天要吃什么呢——随机挑选美食与饮品" />
   <title>今天要吃什么呢？</title>
   <style>
     :root { --ink:#ffffff; --muted:rgba(235,235,245,.62); --deep:#40c8e0; --leaf:#64d2ff; --mint:rgba(64,200,224,.14); --cream:#000000; --peach:#ffb266; --pink:#ff375f; --line:rgba(84,84,88,.65); --r:20px; --shadow:0 10px 30px rgba(0,0,0,.45); }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; overflow-x:hidden; -webkit-text-size-adjust:100%; color:var(--ink); font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", system-ui, sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; background:radial-gradient(circle at 14% 6%,rgba(104,134,255,.16) 0%,transparent 60%),radial-gradient(circle at 50% 100%,rgba(148,92,214,.10) 0%,transparent 68%),#06060a; }
+    body { margin:0; min-height:100vh; min-height:100dvh; overflow-x:hidden; -webkit-text-size-adjust:100%; color:var(--ink); font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", system-ui, sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; background:radial-gradient(circle at 14% 6%,rgba(104,134,255,.16) 0%,transparent 60%),radial-gradient(circle at 50% 100%,rgba(148,92,214,.10) 0%,transparent 68%),#06060a; }
     button,input,select { font:inherit; }
     .wrap { width:min(940px, calc(100% - 32px)); margin:auto; padding:44px 0 54px; }
     header { text-align:center; margin-bottom:28px; display:flex; flex-direction:column; align-items:center; }
@@ -95,6 +95,7 @@
     .with-drink-row { text-align:center; margin-top:14px; }
     .with-drink-row label { color:var(--muted); font-size:1rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
     .with-drink-row input { width:auto; margin:0; accent-color:var(--deep); }
+    .reset-row { display:flex; justify-content:center; margin-top:12px; }
     /* ====== 响应式适配 ====== */
     @media (max-width:640px) {
       html { font-size:15px; -webkit-tap-highlight-color:transparent; }
@@ -788,9 +789,17 @@
     }
     .panel::after {
       content:"";
-      position:absolute; left:0; right:0; top:0; height:1px;
-      background:linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent);
+      position:absolute; inset:0; border-radius:inherit;
+      background:
+        linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent) top/100% 1px no-repeat,
+        radial-gradient(240px circle at var(--mx,50%) var(--my,0%), hsl(var(--hue) 100% 88% / .11), transparent 68%);
       pointer-events:none;
+      opacity:.58;
+      transition:opacity .25s ease;
+      z-index:3;
+    }
+    @media (hover:hover) and (pointer:fine) {
+      .panel:hover::after { opacity:1; }
     }
     .result:hover .food-icon { filter:drop-shadow(0 0 12px rgba(150,195,255,.55)); }
 
@@ -977,6 +986,310 @@
       .food-drift { display:none !important; }
       .food-drift .fd { animation:none !important; }
     }
+  
+    /* ====== 平衡精修层：HIG / Motion / 可访问性 ====== */
+    button, .chip, .text-btn, .mini-btn, .secondary, .save, .bz-mode { touch-action:manipulation; }
+    .panel, .result { contain:layout style; }
+    html.motion-paused body::before,
+    html.motion-paused body::after,
+    html.motion-paused::after { animation-play-state:paused !important; }
+    button:focus-visible, input:focus-visible, select:focus-visible,
+    .chip:focus-visible, .text-btn:focus-visible, .mini-btn:focus-visible,
+    .secondary:focus-visible, .save:focus-visible, .bz-mode:focus-visible {
+      outline:2px solid hsl(var(--hue) 100% 80%);
+      outline-offset:3px;
+      box-shadow:0 0 0 5px hsl(var(--hue) 100% 70% / .25), var(--glass-hi);
+    }
+    @media (max-width:640px) {
+      .wrap {
+        padding-left:max(14px, env(safe-area-inset-left));
+        padding-right:max(14px, env(safe-area-inset-right));
+        padding-bottom:calc(36px + env(safe-area-inset-bottom));
+      }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      :root { --blur:none; --glass:rgba(24,25,29,.98); --glass-strong:rgba(36,38,45,.98); }
+      .panel, .kicker, dialog, .dialog-inner, .result, .chip, .mini-btn, .secondary, .text-btn, .personal-item button, .main-btn, .save, .mini-btn.primary, .drink-main-btn, .bz-mode, .bz-toggle {
+        backdrop-filter:none !important;
+        -webkit-backdrop-filter:none !important;
+      }
+    }
+    @media (prefers-contrast: more) {
+      :root { --muted:rgba(245,245,247,.94); --glass-line:rgba(255,255,255,.52); }
+      .chip, .mini-btn, .secondary, .text-btn, .main-btn, .save, .bz-mode, .bz-toggle, .panel, .result, dialog { border-color:rgba(255,255,255,.52); }
+    }
+    /* ====== 五项动态增强 ====== */
+    .selection-summary {
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      min-height:26px; margin:14px auto 0; color:var(--muted);
+      font-size:.92rem; line-height:1.4; text-align:center; max-width:680px;
+      transition:color .25s ease, opacity .25s ease;
+    }
+    .selection-summary.has-selection { color:var(--ink); }
+    .selection-summary .summary-dot {
+      width:7px; height:7px; flex:none; border-radius:50%;
+      background:var(--deep); box-shadow:0 0 12px hsl(var(--hue) 100% 70% / .65);
+    }
+    .selection-summary:not(.has-selection) .summary-dot { opacity:.45; box-shadow:none; }
+
+    .reel-inner { min-height:128px; justify-content:center; }
+    .reel-viewport {
+      height:84px; min-width:min(320px, 78vw); max-width:min(560px, 90vw);
+      overflow:hidden; position:relative;
+      -webkit-mask-image:linear-gradient(transparent, #000 22%, #000 78%, transparent);
+      mask-image:linear-gradient(transparent, #000 22%, #000 78%, transparent);
+    }
+    .reel-track { display:flex; flex-direction:column; align-items:center; transform:translateZ(0); }
+    .reel-track.kick { animation:reelStep .15s cubic-bezier(.2,0,0,1); }
+    .reel-item {
+      height:84px; min-width:0; display:flex; align-items:center; justify-content:center; gap:8px;
+      white-space:nowrap; transform-origin:center; transition:opacity .12s ease, transform .12s ease;
+    }
+    .reel-item .reel-icon { font-size:1.45rem; line-height:1; }
+    .reel-item .reel-name { max-width:min(70vw,420px); overflow:hidden; text-overflow:ellipsis; font-size:1.35rem; font-weight:600; }
+    .reel-top, .reel-bottom { opacity:.26; transform:scale(.84); }
+    .reel-mid { opacity:1; transform:scale(1); text-shadow:0 0 18px hsl(var(--hue) 100% 75% / .38); }
+    @keyframes reelStep { from { transform:translateY(-42px); } to { transform:translateY(0); } }
+
+    .result.spotlight {
+      z-index:4;
+      animation:resultSpotlight .9s cubic-bezier(.2,.78,.25,1) both;
+      box-shadow:var(--glass-hi), inset 0 0 34px hsl(var(--hue) 100% 75% / .18), 0 0 0 1px hsl(var(--hue) 100% 80% / .32), 0 24px 64px rgba(0,0,0,.62), 0 0 54px hsl(var(--hue) 100% 65% / .24);
+    }
+    .panel.spotlight-dim { opacity:.72; filter:saturate(.82) brightness(.88); }
+    @keyframes resultSpotlight {
+      0% { transform:scale(.96); filter:brightness(.92); }
+      58% { transform:scale(1.035); filter:brightness(1.12); }
+      100% { transform:scale(1); filter:none; }
+    }
+
+    .main-btn { position:relative; overflow:hidden; isolation:isolate; }
+    .main-btn::after {
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background:linear-gradient(105deg, transparent 20%, rgba(255,255,255,.34) 45%, transparent 70%);
+      transform:translateX(-135%); opacity:0;
+    }
+    .main-btn.is-busy { animation:buttonCharge 1.25s ease-in-out infinite; }
+    .main-btn.is-busy::after { opacity:1; animation:chargeSweep 1.2s ease-in-out infinite; }
+    @keyframes chargeSweep { 0%,18% { transform:translateX(-135%); } 62%,100% { transform:translateX(135%); } }
+    @keyframes buttonCharge {
+      0%,100% { filter:brightness(1); box-shadow:var(--glass-hi), 0 0 18px hsl(var(--hue) 100% 70% / .18), 0 12px 28px rgba(0,0,0,.46); }
+      50% { filter:brightness(1.16); box-shadow:var(--glass-hi), 0 0 32px hsl(var(--hue) 100% 72% / .42), 0 14px 34px rgba(0,0,0,.52); }
+    }
+
+    @media (max-width:640px) {
+      .selection-summary { margin-top:12px; font-size:.88rem; padding:0 10px; }
+      .reel-viewport { min-width:88%; }
+      .reel-item .reel-name { font-size:1.2rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reel-track.kick, .result.spotlight, .main-btn.is-busy, .main-btn.is-busy::after { animation:none !important; }
+      .panel.spotlight-dim { opacity:1 !important; filter:none !important; }
+    }
+    /* ====== 柔和立体层：近阴影 + 远阴影 + 低对比内发光 ====== */
+    :root {
+      --depth-near:0 3px 8px rgba(0,0,0,.28);
+      --depth-mid:0 16px 38px rgba(0,0,0,.38);
+      --depth-far:0 34px 78px rgba(0,0,0,.22);
+      --depth-tint:0 16px 40px hsl(var(--hue) 28% 4% / .34);
+      --depth-highlight:inset 0 1px 0 rgba(255,255,255,.48);
+    }
+    .panel:not(.result) {
+      box-shadow:
+        var(--depth-highlight),
+        inset 0 -16px 30px hsl(var(--hue) 30% 5% / .16),
+        var(--depth-near),
+        var(--depth-mid),
+        var(--depth-far);
+    }
+    .result:not(.spotlight) {
+      box-shadow:
+        var(--depth-highlight),
+        inset 0 -20px 32px rgba(0,0,0,.24),
+        0 4px 10px rgba(0,0,0,.32),
+        0 24px 56px rgba(0,0,0,.48),
+        0 48px 100px rgba(0,0,0,.24);
+    }
+    .chip, .mini-btn, .secondary, .text-btn {
+      box-shadow:
+        var(--glass-hi),
+        inset 0 -6px 16px rgba(10,30,80,.20),
+        0 2px 5px rgba(0,0,0,.26),
+        0 8px 18px rgba(0,0,0,.20);
+    }
+    .main-btn, .save, .mini-btn.primary, .drink-main-btn {
+      box-shadow:
+        var(--depth-highlight),
+        inset 0 -12px 24px rgba(10,30,80,.28),
+        0 4px 10px rgba(0,0,0,.32),
+        0 16px 34px rgba(0,0,0,.42),
+        0 30px 62px hsl(var(--hue) 30% 4% / .24);
+    }
+    .main-btn.is-busy {
+      animation:buttonCharge 1.25s ease-in-out infinite;
+    }
+    .bz-toggle, .bz-all {
+      box-shadow:var(--glass-hi), 0 2px 5px rgba(0,0,0,.24), 0 10px 24px rgba(0,0,0,.26);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .main-btn.is-busy { animation:none !important; }
+    }
+    /* ====== 旧版最终精修：更柔和的玻璃层级与状态反馈 ====== */
+    .selection-summary {
+      width:max-content; max-width:100%; padding:7px 14px;
+      border:1px solid var(--glass-line); border-radius:999px;
+      background:rgba(255,255,255,.055);
+      box-shadow:var(--glass-hi), inset 0 -6px 16px rgba(0,0,0,.12), 0 8px 20px rgba(0,0,0,.18);
+    }
+    .selection-summary.has-selection {
+      background:linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.045));
+      border-color:hsl(var(--hue) 95% 82% / .34);
+    }
+    .panel:not(.result) {
+      background-image:
+        linear-gradient(112deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,.025) 34%, rgba(255,255,255,0) 52%),
+        radial-gradient(120% 70% at 18% 0%, hsl(var(--hue) 80% 70% / .10), transparent 70%);
+    }
+    .panel:not(.result):hover { filter:brightness(1.018); }
+    .result:not(.spotlight):hover { transform:translateY(-2px); }
+    .result, .panel, .main-btn, .chip, .bz-toggle { transition:transform .28s var(--spring), filter .24s ease, box-shadow .28s var(--spring), background-color .24s ease, border-color .24s ease; }
+    .chip.active::before {
+      content:""; position:absolute; inset:1px 1px auto; height:45%;
+      border-radius:inherit; pointer-events:none;
+      background:linear-gradient(180deg, rgba(255,255,255,.17), transparent);
+    }
+    .main-btn:focus-visible, .chip:focus-visible, .bz-toggle:focus-visible, .text-btn:focus-visible { outline-offset:4px; }
+    @media (max-width:640px) {
+      .selection-summary { padding:6px 11px; }
+    }
+    @media (hover:hover) and (pointer:fine) {
+      .panel:not(.result):hover { box-shadow:var(--depth-highlight), inset 0 -16px 30px hsl(var(--hue) 30% 5% / .16), 0 4px 10px rgba(0,0,0,.30), 0 20px 44px rgba(0,0,0,.42), 0 38px 82px rgba(0,0,0,.22); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .result, .panel, .main-btn, .chip, .bz-toggle { transition:none !important; }
+      .result:not(.spotlight):hover { transform:none !important; }
+    }
+    /* ====== 玻璃边框增强 + 选中态对比增强 ====== */
+    :root { --blur:blur(14px) saturate(190%); }
+    .panel, .result, dialog { border-color:rgba(178,216,255,.30); }
+    .chip, .mini-btn, .secondary, .text-btn, .bz-mode, .bz-toggle { border-color:rgba(183,220,255,.36); }
+    .chip, .mini-btn, .secondary, .text-btn {
+      background-image:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.025));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.58),inset 0 0 0 1px rgba(255,255,255,.055),inset 0 -7px 16px rgba(8,20,50,.22),0 0 18px rgba(78,160,255,.14),0 5px 16px rgba(0,0,0,.30);
+    }
+    .chip:hover, .mini-btn:hover, .secondary:hover, .text-btn:hover {
+      border-color:rgba(209,235,255,.58);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.72),inset 0 0 0 1px rgba(255,255,255,.10),inset 0 0 24px rgba(104,178,255,.20),0 0 24px rgba(85,170,255,.28),0 14px 28px rgba(0,0,0,.36);
+    }
+    .chip.active {
+      color:#fff;
+      background-color:rgba(23,57,82,.56);
+      background-image:linear-gradient(180deg,hsl(var(--hue) 92% 54% / .72),hsl(var(--hue) 82% 39% / .58));
+      border-color:hsl(var(--hue) 100% 88% / .62);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.78),inset 0 0 0 1px hsl(var(--hue) 100% 88% / .16),inset 0 -10px 20px rgba(0,0,0,.24),0 0 22px hsl(var(--hue) 100% 68% / .30),0 10px 24px rgba(0,0,0,.42);
+    }
+    #drinkAvoids .chip.active {
+      color:#fff;
+      background-color:rgba(66,26,50,.56);
+      background-image:linear-gradient(180deg,rgba(212,73,132,.76),rgba(145,43,95,.58));
+      border-color:rgba(255,226,239,.62);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.78),inset 0 0 0 1px rgba(255,220,238,.18),inset 0 -10px 20px rgba(0,0,0,.24),0 0 22px rgba(255,85,144,.28),0 10px 24px rgba(0,0,0,.42);
+    }
+    .main-btn, .save, .mini-btn.primary, .drink-main-btn {
+      border-color:rgba(213,237,255,.48);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.70),inset 0 0 0 1px rgba(255,255,255,.09),inset 0 -12px 24px rgba(0,0,0,.20),0 0 24px rgba(92,177,255,.24),0 15px 34px rgba(0,0,0,.42),0 30px 64px rgba(0,0,0,.22);
+    }
+    .bz-toggle:hover { border-color:rgba(209,235,255,.55); box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 0 22px rgba(92,177,255,.20),0 12px 26px rgba(0,0,0,.28); }
+    @media (prefers-reduced-motion: reduce) { .chip, .mini-btn, .secondary, .text-btn, .main-btn, .bz-toggle { transition:none !important; } }
+    /* ====== 透明液态玻璃修正：降低选中/主按钮实心感 ====== */
+    .chip.active {
+      color:#fff;
+      background-color:rgba(255,255,255,.055);
+      background-image:linear-gradient(180deg,hsl(var(--hue) 100% 76% / .46),hsl(var(--hue) 92% 54% / .20));
+      border-color:hsl(var(--hue) 100% 90% / .72);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.80),inset 0 0 0 1px hsl(var(--hue) 100% 90% / .17),inset 0 -7px 16px rgba(0,0,0,.13),0 0 18px hsl(var(--hue) 100% 70% / .24),0 8px 20px rgba(0,0,0,.30);
+    }
+    #drinkAvoids .chip.active {
+      color:#fff;
+      background-color:rgba(255,255,255,.055);
+      background-image:linear-gradient(180deg,rgba(255,171,199,.52),rgba(207,95,145,.22));
+      border-color:rgba(255,232,242,.76);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.80),inset 0 0 0 1px rgba(255,224,238,.18),inset 0 -7px 16px rgba(0,0,0,.13),0 0 18px rgba(255,104,158,.24),0 8px 20px rgba(0,0,0,.30);
+    }
+    .main-btn, .save, .mini-btn.primary, .drink-main-btn {
+      color:#fff;
+      background-color:rgba(255,255,255,.085);
+      background-image:linear-gradient(180deg,hsl(var(--hue) 100% 74% / .34),hsl(var(--hue) 92% 50% / .13));
+      border-color:rgba(203,232,255,.52);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.76),inset 0 0 0 1px rgba(255,255,255,.10),inset 0 -10px 22px rgba(0,0,0,.14),0 0 22px hsl(var(--hue) 100% 70% / .20),0 13px 30px rgba(0,0,0,.32),0 28px 58px rgba(0,0,0,.14);
+    }
+    .drink-main-btn { background-image:linear-gradient(180deg,hsl(190 100% 78% / .30),hsl(196 88% 54% / .12)); }
+    .main-btn:hover, .save:hover, .mini-btn.primary:hover, .drink-main-btn:hover, .chip.active:hover, #drinkAvoids .chip.active:hover {
+      background-color:rgba(255,255,255,.12);
+      background-image:linear-gradient(180deg,hsl(var(--hue) 100% 84% / .48),hsl(var(--hue) 92% 60% / .22));
+      border-color:rgba(238,247,255,.86);
+    }
+    .main-btn:active, .save:active, .mini-btn.primary:active, .drink-main-btn:active, .chip.active:active, #drinkAvoids .chip.active:active {
+      background-color:rgba(8,24,48,.42);
+      background-image:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.03));
+    }
+    /* ====== 透明玻璃按钮、浅色选中态、空态居中 ====== */
+    #draw, #drawDrink {
+      color:#fff;
+      background-color:rgba(255,255,255,.09);
+      background-image:linear-gradient(180deg,rgba(255,255,255,.56),rgba(255,255,255,.08) 48%,rgba(75,157,255,.22));
+      border:1px solid rgba(209,236,255,.62);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.84),inset 0 0 0 1px rgba(255,255,255,.12),inset 0 -10px 22px rgba(0,20,50,.14),0 0 24px rgba(90,170,255,.26),0 14px 30px rgba(0,0,0,.34);
+      backdrop-filter:blur(16px) saturate(200%);
+    }
+    #drawDrink {
+      background-image:linear-gradient(180deg,rgba(255,255,255,.54),rgba(151,240,230,.25) 48%,rgba(54,184,178,.12));
+      border-color:rgba(213,255,249,.66);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.86),inset 0 0 0 1px rgba(255,255,255,.12),inset 0 -10px 22px rgba(0,40,48,.12),0 0 24px rgba(80,220,211,.24),0 14px 30px rgba(0,0,0,.34);
+    }
+    #draw:hover, #drawDrink:hover {
+      background-color:rgba(255,255,255,.14);
+      border-color:rgba(238,249,255,.88);
+    }
+    #draw:hover { background-image:linear-gradient(180deg,rgba(255,255,255,.68),rgba(130,194,255,.30) 48%,rgba(45,125,220,.15)); }
+    #drawDrink:hover { background-image:linear-gradient(180deg,rgba(255,255,255,.68),rgba(171,246,237,.34) 48%,rgba(46,174,168,.15)); }
+    #draw:active, #drawDrink:active {
+      background-color:rgba(10,28,52,.42);
+      background-image:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.03));
+    }
+    #likes .chip.active, #avoids .chip.active, #bzBrands .chip.active, #bzCats .chip.active, #bzAvoid .chip.active, .bz-all.active {
+      color:#fff;
+      background-color:rgba(255,255,255,.065);
+      background-image:linear-gradient(180deg,hsl(var(--hue) 100% 82% / .34),hsl(var(--hue) 92% 62% / .14));
+      border-color:hsl(var(--hue) 100% 91% / .66);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.82),inset 0 0 0 1px hsl(var(--hue) 100% 90% / .13),inset 0 -7px 16px rgba(0,0,0,.10),0 0 18px hsl(var(--hue) 100% 72% / .20),0 8px 20px rgba(0,0,0,.26);
+    }
+    #drinkAvoids .chip.active {
+      color:#fff;
+      background-color:rgba(255,255,255,.065);
+      background-image:linear-gradient(180deg,rgba(255,185,211,.42),rgba(214,109,157,.16));
+      border-color:rgba(255,235,244,.72);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.84),inset 0 0 0 1px rgba(255,228,240,.15),inset 0 -7px 16px rgba(0,0,0,.10),0 0 18px rgba(255,112,163,.20),0 8px 20px rgba(0,0,0,.26);
+    }
+    .bz-mode.active {
+      color:#fff;
+      background-color:rgba(255,255,255,.065);
+      background-image:linear-gradient(180deg,hsl(190 100% 84% / .34),hsl(192 90% 62% / .14));
+      border-color:rgba(214,255,250,.68);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.84),inset 0 0 0 1px rgba(218,255,251,.13),inset 0 -7px 16px rgba(0,0,0,.10),0 0 18px rgba(88,220,214,.22),0 8px 20px rgba(0,0,0,.26);
+    }
+    .result > .empty {
+      flex:1 1 auto;
+      width:100%;
+      min-height:0;
+      margin:auto;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+    .result > .empty .ico { margin:0; }
   </style>
 </head>
 <body>
@@ -1040,6 +1353,7 @@
           <button class="chip" data-dtag="纯茶">纯茶</button>
         </div>
       </div>
+      <div class="selection-summary" id="selectionSummary" aria-live="polite"><span class="summary-dot" aria-hidden="true"></span><span id="selectionSummaryText">还没选偏好，直接抽取也完全随机</span></div>
       <div class="draw-btns">
         <button type="button" class="main-btn" id="draw"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11h18a9 9 0 0 1-9 9 9 9 0 0 1-9-9z"/><path d="M8 7c0-1.5 1-2 1-3M12 7c0-1.5 1-2 1-3M16 7c0-1.5 1-2 1-3"/></svg> 吃啥</button>
         <div class="draw-drink-wrap">
@@ -1047,6 +1361,7 @@
         </div>
       </div>
       <div class="with-drink-row"><label><input type="checkbox" id="withDrink" /> 同时抽饮品</label></div>
+      <div class="reset-row"><button class="text-btn" id="reset">重置专区</button></div>
       <p class="notice" id="notice" role="alert"></p>
     </section>
     <section class="results" id="results" aria-live="polite">
@@ -1074,7 +1389,7 @@
           <div class="bz-head">
             <p class="chip-group-title">参与抽取的品牌</p>
             <div class="bz-head-right">
-              <span class="bz-note">默认不选 · 点一下选中一个品牌</span>
+              <span class="bz-note">默认全选 · 点一下取消品牌</span>
               <button type="button" class="chip bz-all" id="bzSelectAll">全选</button>
             </div>
           </div>
@@ -1104,12 +1419,12 @@
         </div>
       </div>
     </section>
-    <div class="extras"><button class="text-btn" id="manage"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> 管理我的菜单</button><button class="text-btn" id="historyBtn"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> 最近记录</button><button class="text-btn" id="themeBtn"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="9.5" cy="15" r="1.1" fill="currentColor" stroke="none"/></svg> 外观</button><button class="text-btn" id="reset">清空本次选择</button></div>
+    <div class="extras"><button class="text-btn" id="manage"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> 管理我的菜单</button><button class="text-btn" id="historyBtn"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> 最近记录</button><button class="text-btn" id="themeBtn"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="9.5" cy="15" r="1.1" fill="currentColor" stroke="none"/></svg> 外观</button></div>
     <footer>内置 600+ 道餐食 · 300+ 款主流饮品 · 自定义菜单保存在本机</footer>
   </main>
-  <dialog id="menuDialog">
+  <dialog id="menuDialog" aria-labelledby="menuDialogTitle">
     <form method="dialog" class="dialog-inner" id="dishForm">
-      <h2>我的菜单</h2><p>加上你常去店里的招牌菜，下一次就可能抽到它。</p>
+      <h2 id="menuDialogTitle">我的菜单</h2><p>加上你常去店里的招牌菜，下一次就可能抽到它。</p>
       <div class="form-grid">
         <label>食物名称<input required id="dishName" placeholder="例如：阿姨家的土豆牛腩饭" /></label>
         <label>类别<select id="dishType"><option>米饭</option><option>面食</option><option>粉</option><option>麻辣</option><option>轻食</option><option>西式</option><option>其他</option></select></label>
@@ -1133,9 +1448,9 @@
       </div>
     </form>
   </dialog>
-  <dialog id="themeDialog">
+  <dialog id="themeDialog" aria-labelledby="themeDialogTitle">
     <div class="dialog-inner">
-      <h2>外观配色</h2>
+      <h2 id="themeDialogTitle">外观配色</h2>
       <p>拖动色相滑块，全站配色（强调色 / 玻璃底 / 光斑 / 剪影）会实时联动。</p>
       <div class="theme-preview" id="themePreview">
         <span class="tp-chip active">标签</span>
@@ -1154,9 +1469,9 @@
       <div class="dialog-actions"><button class="secondary" type="button" id="hueReset">恢复默认</button><button class="save" type="button" id="closeTheme">完成</button></div>
     </div>
   </dialog>
-  <dialog id="historyDialog">
+  <dialog id="historyDialog" aria-labelledby="historyDialogTitle">
     <div class="dialog-inner">
-      <h2>最近吃了啥</h2>
+      <h2 id="historyDialogTitle">最近吃了啥</h2>
       <p>最近 10 次抽签结果，帮你回忆一下。</p>
       <div class="history-list" id="historyList"><p style="color:var(--muted)">还没有记录。</p></div>
       <div class="dialog-actions"><button class="secondary" type="button" id="closeHistory">关闭</button><button class="secondary" type="button" id="clearHistory" style="color:#b46755">清空记录</button></div>
@@ -1335,6 +1650,24 @@ const drinks = [{"name":"多肉葡萄（喜茶）","type":"果茶","tags":[],"re
   document.addEventListener('pointermove', function(e){
     document.documentElement.style.setProperty('--cx', e.clientX + 'px');
     document.documentElement.style.setProperty('--cy', e.clientY + 'px');
+  }, { passive:true });
+
+  /* 0.1) 桌面端面板玻璃反光：只在精细指针设备上跟随鼠标 */
+  let sheenPanel = null, sheenRaf = null, sheenX = '50%', sheenY = '0%';
+  document.addEventListener('pointermove', function(e){
+    const panel = e.target.closest && e.target.closest('.panel');
+    if(!panel) return;
+    const r = panel.getBoundingClientRect();
+    sheenPanel = panel;
+    sheenX = ((e.clientX - r.left) / Math.max(r.width, 1) * 100).toFixed(1) + '%';
+    sheenY = ((e.clientY - r.top) / Math.max(r.height, 1) * 100).toFixed(1) + '%';
+    if(sheenRaf) return;
+    sheenRaf = requestAnimationFrame(function(){
+      sheenRaf = null;
+      if(!sheenPanel) return;
+      sheenPanel.style.setProperty('--mx', sheenX);
+      sheenPanel.style.setProperty('--my', sheenY);
+    });
   }, { passive:true });
 
   /* 1) 指针视差：背景光斑与卡片轻微跟随 */
@@ -1567,10 +1900,30 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 
 // === Chip 选择 ===
-$$('.chip').forEach(b => b.addEventListener('click', () => b.classList.toggle('active')));
+function syncChipAria(btn){ if(btn) btn.setAttribute('aria-pressed', btn.classList.contains('active') ? 'true' : 'false'); }
+function syncAllChipAria(){ $$('.chip').forEach(syncChipAria); }
+$$('.chip').forEach(b => {
+  syncChipAria(b);
+  b.addEventListener('click', () => { b.classList.toggle('active'); syncChipAria(b); updateSelectionSummary(); });
+});
     const selectedDrink = () => $$('#drinkAvoids .chip.active').map(b => b.dataset.dtag);
 
 const selected = id => $$('#' + id + ' .chip.active').map(b => b.dataset.tag);
+function updateSelectionSummary(){
+  const likes = selected('likes');
+  const avoids = selected('avoids');
+  const drinkTags = selectedDrink();
+  const parts = [];
+  if(likes.length) parts.push('偏好 ' + likes.slice(0,2).join('、') + (likes.length > 2 ? ' 等' + likes.length + '项' : ''));
+  if(avoids.length) parts.push('忌口 ' + avoids.slice(0,2).join('、') + (avoids.length > 2 ? ' 等' + avoids.length + '项' : ''));
+  if(drinkTags.length) parts.push('饮品 ' + drinkTags.slice(0,2).join('、') + (drinkTags.length > 2 ? ' 等' + drinkTags.length + '项' : ''));
+  const box = $('#selectionSummary');
+  const el = $('#selectionSummaryText');
+  if(!box || !el) return;
+  if(!parts.length){ el.textContent = '还没选偏好，直接抽取也完全随机'; box.classList.remove('has-selection'); return; }
+  el.textContent = '已选 · ' + parts.join(' · ');
+  box.classList.add('has-selection');
+}
 
 // === 店名简称映射：饮品结果显示「饮品名 + 店名简称」 ===
 const BRAND_SHORT = {
@@ -1584,6 +1937,24 @@ function splitBrand(name){
   if (!m) return { name: name, short: '' };
   const raw = m[2];
   return { name: m[1], short: (raw in BRAND_SHORT) ? BRAND_SHORT[raw] : raw };
+}
+
+// === 结果揭晓聚焦 ===
+let spotlightTimer = null;
+function clearSpotlight(){
+  if(spotlightTimer) clearTimeout(spotlightTimer);
+  spotlightTimer = null;
+  $$('.panel.spotlight, .panel.spotlight-dim').forEach(function(el){ el.classList.remove('spotlight','spotlight-dim'); });
+}
+function spotlightResult(target){
+  clearSpotlight();
+  const r = $(target);
+  if(!r) return;
+  $$('.panel').forEach(function(el){
+    if(el !== r && !el.contains(r)) el.classList.add('spotlight-dim');
+  });
+  r.classList.add('spotlight');
+  spotlightTimer = setTimeout(function(){ clearSpotlight(); }, 1500);
 }
 
 // === 结果渲染（保留操作按钮） ===
@@ -1606,22 +1977,52 @@ function showResult(target, item, label) {
   '</div>';
   fitName(r);
   playReveal(target);
+  spotlightResult(target);
 }
 
 function showEmpty(target, text) {
   const r = $(target);
+  clearSpotlight();
   r.classList.remove('pop', 'rolling');
   r.innerHTML = '<div class="empty">' + text + '</div>';
 }
 
-function showRolling(target) {
+function reelItemHTML(item){
+  const icon = item && item.icon ? item.icon : '🍽️';
+  const name = item && item.name ? item.name : '…';
+  return '<span class="reel-icon">' + icon + '</span><span class="reel-name">' + name + '</span>';
+}
+function updateReel(target, prev, current, next){
   const r = $(target);
+  const track = r && r.querySelector('.reel-track');
+  if(!track) return;
+  const items = track.querySelectorAll('.reel-item');
+  if(items.length < 3) return;
+  items[0].innerHTML = reelItemHTML(prev || current);
+  items[1].innerHTML = reelItemHTML(current || prev);
+  items[2].innerHTML = reelItemHTML(next || current);
+  track.classList.remove('kick');
+  void track.offsetWidth;
+  track.classList.add('kick');
+}
+function showRolling(target, label) {
+  const r = $(target);
+  clearSpotlight();
   r.classList.remove('pop');
   r.classList.add('rolling');
-  r.innerHTML = '<div class="result-inner"><div class="food-icon">🎲</div><div class="food-name">…</div><span class="food-type">抽取中…</span></div>';
+  r.innerHTML = '<div class="result-inner reel-inner"><div class="reel-viewport" aria-hidden="true"><div class="reel-track">' +
+    '<div class="reel-item reel-top">…</div><div class="reel-item reel-mid">…</div><div class="reel-item reel-bottom">…</div>' +
+    '</div></div><span class="food-type">' + (label || '抽取中…') + '</span></div>';
 }
 
 // === 抽签核心 ===
+const drawingState = { food:false, drink:false };
+function setDrawBusy(id, busy){
+  const b = $(id);
+  if(!b) return;
+  b.setAttribute('aria-busy', busy ? 'true' : 'false');
+  b.classList.toggle('is-busy', busy);
+}
 function getFoodCandidates() {
   const likes = selected('likes');
   const avoids = selected('avoids');
@@ -1669,12 +2070,15 @@ function pickRandom(arr) {
 }
 
 function draw() {
+  if (drawingState.food) return;
   vibrate(12);
   const candidates = getFoodCandidates();
   if (!candidates.length) {
     $('#notice').textContent = '这些条件组合后没有合适选项，试着少选一项忌口吧。';
     return;
   }
+  drawingState.food = true;
+  setDrawBusy('#draw', true);
   $('#notice').textContent = '';
   lastFoodCandidates = candidates;
 
@@ -1683,27 +2087,32 @@ function draw() {
   let ticks = 0;
   const rollInterval = setInterval(() => {
     const preview = pickRandom(candidates);
-    const r = $('#result');
-    r.querySelector('.food-icon').textContent = preview.icon || '🍽️';
-    r.querySelector('.food-name').textContent = preview.name;
+    const prev = pickRandom(candidates);
+    const next = pickRandom(candidates);
+    updateReel('#result', prev, preview, next);
     ticks++;
     if (ticks >= 8) {
       clearInterval(rollInterval);
       const f = pickRandom(candidates);
       showResult('#result', f, '今天');
       addHistory(f, '今日');
+      drawingState.food = false;
+      setDrawBusy('#draw', false);
       if ($('#withDrink').checked) drawDrink();
     }
   }, 70);
 }
 
 function drawDrink() {
+  if (drawingState.drink) return false;
   vibrate(12);
   const candidates = getDrinkCandidates();
   if (!candidates.length) {
     $('#notice').textContent = '饮品条件太严格啦，试着少选一项忌口吧。';
     return false;
   }
+  drawingState.drink = true;
+  setDrawBusy('#drawDrink', true);
   $('#notice').textContent = '';
   lastDrinkCandidates = candidates;
 
@@ -1711,14 +2120,16 @@ function drawDrink() {
   let ticks = 0;
   const rollInterval = setInterval(() => {
     const preview = pickRandom(candidates);
-    const r = $('#drinkResult');
-    r.querySelector('.food-icon').textContent = preview.icon || '🥤';
-    r.querySelector('.food-name').textContent = preview.name;
+    const prev = pickRandom(candidates);
+    const next = pickRandom(candidates);
+    updateReel('#drinkResult', prev, preview, next);
     ticks++;
     if (ticks >= 6) {
       clearInterval(rollInterval);
       const d = pickRandom(candidates);
       showResult('#drinkResult', d, '饮品');
+      drawingState.drink = false;
+      setDrawBusy('#drawDrink', false);
     }
   }, 70);
   return true;
@@ -2626,7 +3037,7 @@ if (typeof window !== 'undefined' && window.__pickFoodIcon) {
   });
 }
 
-const BZ = { mode:'brand', lastBrand:'', lastItem:null };
+const BZ = { mode:'brand', lastBrand:'', lastItem:null, rolling:false };
 
 function bzSay(msg){ $('#bzNotice').textContent = msg || ''; }
 
@@ -2660,20 +3071,24 @@ BZ.pendingBrand = null;
 BZ.pendingPool = null;
 
 /* 通用滚动动画：list 为候选数组，fmt 返回 {icon,name,type} */
+function setBzBusy(busy){
+  const b = $('#bzDraw');
+  if(!b) return;
+  b.setAttribute('aria-busy', busy ? 'true' : 'false');
+  b.classList.toggle('is-busy', busy);
+}
 function bzRoll(list, fmt, label, ticks, done){
-  const r = $('#bzResult');
-  r.classList.remove('pop');
-  r.classList.add('rolling');
-  r.innerHTML = '<div class="result-inner"><div class="food-icon">🏪</div><div class="food-name">…</div>' +
-                '<span class="food-type">' + label + '</span></div>';
+  BZ.rolling = true;
+  setBzBusy(true);
+  showRolling('#bzResult', label);
   let i = 0;
   const t = setInterval(function(){
-    const f = fmt(list[i % list.length]);
-    r.querySelector('.food-icon').textContent = f.icon;
-    r.querySelector('.food-name').textContent = f.name;
-    r.querySelector('.food-type').textContent = f.type;
+    const current = fmt(list[i % list.length]);
+    const prev = fmt(list[(i - 1 + list.length) % list.length]);
+    const next = fmt(list[(i + 1) % list.length]);
+    updateReel('#bzResult', prev, current, next);
     i++;
-    if (i >= ticks) { clearInterval(t); done(); }
+    if (i >= ticks) { clearInterval(t); BZ.rolling = false; setBzBusy(false); done(); }
   }, 70);
 }
 
@@ -2757,6 +3172,7 @@ function bzShow(brand, item, note){
   bzSay(note || '');
   fitName(r);
   playReveal('#bzResult');
+  spotlightResult('#bzResult');
   addHistory({ name: item.name, type: brand + ' · ' + item.label, icon: item.icon }, '品牌');
 }
 
@@ -2796,7 +3212,7 @@ function bzDrawCat(){
 }
 
 function bzDraw(){
-  if (BZ.stage === 'confirm') { bzSay('请先点「确定这个品牌」或「换个品牌」。'); return; }
+  if (BZ.rolling || BZ.stage === 'confirm') { if(BZ.stage === 'confirm') bzSay('请先点「确定这个品牌」或「换个品牌」。'); return; }
   if (BZ.mode === 'cat') bzDrawCat(); else bzDrawBrand();
 }
 
@@ -2812,11 +3228,13 @@ function bzAccept(){
 /* 「全选」按钮状态同步 */
 function bzSyncAll(){
   const chips = $$('#bzBrands .chip');
+  chips.forEach(syncChipAria);
   const btn = $('#bzSelectAll');
   if (!btn) return;
   const allOn = chips.length > 0 && chips.every(function(c){ return c.classList.contains('active'); });
   btn.classList.toggle('active', allOn);
   btn.textContent = allOn ? '取消全选' : '全选';
+  syncChipAria(btn);
 }
 
 function bzRenderChips(){
@@ -2825,8 +3243,8 @@ function bzRenderChips(){
     const list = g.brands.filter(function(b){ return BRAND_MENU.some(function(m){ return m.brand === b; }); });
     if (!list.length) return;
     bh += '<p class="chip-group-title">' + g.g + '</p>';
-    // 默认不选中，需手动点选
-    list.forEach(function(b){ bh += '<button type="button" class="chip" data-bz-brand="' + b + '">' + b + '</button>'; });
+    // 默认全选，用户可逐个取消，也可用右侧按钮一键取消全选
+    list.forEach(function(b){ bh += '<button type="button" class="chip active" data-bz-brand="' + b + '">' + b + '</button>'; });
   });
   $('#bzBrands').innerHTML = bh;
   $('#bzCats').innerHTML = BRAND_CATS.map(function(c){ return '<button type="button" class="chip" data-bz-cat="' + c + '">' + c + '</button>'; }).join('');
@@ -2842,8 +3260,9 @@ function bzRenderChips(){
     btn.addEventListener('click', function(){ btn.classList.toggle('active'); bzSyncAll(); });
   });
   $$('#bzAvoid .chip').forEach(function(btn){
-    btn.addEventListener('click', function(){ btn.classList.toggle('active'); });
+    btn.addEventListener('click', function(){ btn.classList.toggle('active'); syncChipAria(btn); });
   });
+  syncAllChipAria();
   bzSyncAll();
   var meta = $('#bzMeta');
   if (meta) meta.textContent = BRAND_MENU.length + ' 个品牌 · ' + BRAND_ITEMS.length + ' 款单品 · 点此展开';
@@ -2900,7 +3319,7 @@ $('#bzSelectAll').addEventListener('click', function(){
 });
 $('#bzDraw').addEventListener('click', bzDraw);
 $('#bzReset').addEventListener('click', function(){
-  $$('#bzBrands .chip').forEach(function(b){ b.classList.remove('active'); });
+  $$('#bzBrands .chip').forEach(function(b){ b.classList.add('active'); });
   $$('#bzCats .chip').forEach(function(b){ b.classList.remove('active'); });
   $$('#bzAvoid .chip').forEach(function(b){ b.classList.remove('active'); });
   BZ.stage = 'idle'; BZ.pendingBrand = null; BZ.pendingPool = null;
@@ -3151,12 +3570,13 @@ function playReveal(target){
 $('#draw').addEventListener('click', draw);
 $('#drawDrink').addEventListener('click', drawDrink);
 $('#reset').addEventListener('click', () => {
-  $$('.chip.active').forEach(b => b.classList.remove('active'));
-  $$('.drink-avoids .chip.active').forEach(b => b.classList.remove('active'));
+  $$('#likes .chip.active, #avoids .chip.active, #drinkAvoids .chip.active').forEach(b => b.classList.remove('active'));
+  syncAllChipAria();
+  updateSelectionSummary();
   $('#withDrink').checked = false;
   showEmpty('#result', '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/></svg> 点击上方按钮，抽取你的天命食物');
   showEmpty('#drinkResult', '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12l-1.2 15.2A2 2 0 0 1 14.8 21H9.2a2 2 0 0 1-2-1.8L6 4z"/><path d="M7 10h10"/><path d="M12 4V2"/></svg> 点击上方按钮，抽取你的天命饮品');
-  $('#notice').textContent = '已清空本次选择。';
+  $('#notice').textContent = '已重置吃什么专区，品牌专区选择保持不变。';
   lastFoodCandidates = [];
   lastDrinkCandidates = [];
 });
@@ -3209,6 +3629,10 @@ $('#dishForm').addEventListener('submit', e => {
 const hDialog = $('#historyDialog');
 $('#historyBtn').addEventListener('click', () => { renderHistory(); hDialog.showModal(); });
 $('#closeHistory').addEventListener('click', () => hDialog.close());
+
+document.addEventListener('visibilitychange', () => {
+  document.documentElement.classList.toggle('motion-paused', document.hidden);
+});
 $('#clearHistory').addEventListener('click', () => {
   history = [];
   try { localStorage.removeItem('lunch-lottery-history'); } catch(_){}
