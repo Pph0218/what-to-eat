@@ -11,7 +11,7 @@
     body { margin:0; min-height:100vh; overflow-x:hidden; -webkit-text-size-adjust:100%; color:var(--ink); font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", system-ui, sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; background:radial-gradient(circle at 14% 6%,rgba(104,134,255,.16) 0%,transparent 60%),radial-gradient(circle at 50% 100%,rgba(148,92,214,.10) 0%,transparent 68%),#06060a; }
     button,input,select { font:inherit; }
     .wrap { width:min(940px, calc(100% - 32px)); margin:auto; padding:44px 0 54px; }
-    header { text-align:center; margin-bottom:28px; }
+    header { text-align:center; margin-bottom:28px; display:flex; flex-direction:column; align-items:center; }
     .kicker { display:inline-block; padding:6px 14px; background:var(--glass-strong); border-radius:var(--r); color:rgba(235,235,245,.72); font-size:.92rem; }
     h1 { margin:12px 0 5px; font-size:clamp(2.25rem,6vw,4rem); letter-spacing:.07em; color:var(--ink); }
     header p { margin:0; color:var(--muted); font-size:1.08rem; }
@@ -171,35 +171,35 @@
     :root {
       /* —— HIG 标签色 —— */
       --ink:#ffffff;
-      --muted:rgba(235,235,245,.62);
-      --deep:#40c8e0;                         /* systemTeal(dark) 文字/图标 */
-      --leaf:#64d2ff;
-      --mint:rgba(64,200,224,.14);
+      --muted:rgba(235,235,245,.72);
+      --deep:#7cc4ff;                         /* 更偏蓝且足够亮的强调色 */
+      --leaf:#8ecbff;
+      --mint:rgba(90,180,255,.16);
       --cream:#000000;
       --peach:#ffb266;                        /* 保留令牌，但不再用于标签文字 */
       --pink:#ff375f;
       --line:rgba(84,84,88,.65);
       --r:20px;
       /* —— 深色玻璃材质 —— */
-      --glass:rgba(28,28,30,.66);
-      --glass-strong:rgba(44,44,46,.72);
-      --glass-line:rgba(255,255,255,.14);
-      --glass-hi:inset 0 1px 0 rgba(255,255,255,.20);
-      --glass-flat:inset 0 1px 0 rgba(255,255,255,.06);
-      --glass-glow:inset 0 0 30px rgba(255,255,255,.04);
+      --glass:rgba(16,23,42,.66);
+      --glass-strong:rgba(30,44,74,.56);
+      --glass-line:rgba(170,205,255,.22);
+      --glass-hi:inset 0 1px 0 rgba(255,255,255,.42);
+      --glass-flat:inset 0 1px 0 rgba(255,255,255,.10);
+      --glass-glow:inset 0 0 26px rgba(110,170,255,.07);
       --blur:blur(12px) saturate(180%);
       --soft:0 10px 30px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.30);
       --lift:0 18px 44px rgba(0,0,0,.55), 0 4px 12px rgba(0,0,0,.35);
       --spring:cubic-bezier(.34,1.56,.64,1);
       --shadow:var(--soft);
       /* —— 玻璃染色按钮令牌 —— */
-      --tint-under:rgba(22,23,26,.78);
-      --tint-a:rgba(160,168,182,.24);
-      --tint-b:rgba(122,130,146,.12);
-      --halo:rgba(150,160,178,.20);
-      --punder:rgba(26,20,24,.78);
-      --ptint-a:rgba(206,124,140,.26);
-      --ptint-b:rgba(160,92,110,.14);
+      --tint-under:rgba(18,28,52,.56);
+      --tint-a:rgba(104,158,255,.30);
+      --tint-b:rgba(58,92,180,.14);
+      --halo:rgba(110,170,255,.30);
+      --punder:rgba(32,24,44,.56);
+      --ptint-a:rgba(206,134,190,.28);
+      --ptint-b:rgba(150,92,160,.14);
       color-scheme:dark;
     }
 
@@ -207,10 +207,10 @@
     body {
       color:var(--ink);
       background:
-        radial-gradient(58% 44% at 14% 6%,  rgba(104,134,255,.20) 0%, rgba(104,134,255,0) 62%),
-        radial-gradient(50% 38% at 84% 14%, rgba(64,200,224,.15) 0%, rgba(64,200,224,0) 60%),
-        radial-gradient(62% 46% at 50% 100%, rgba(148,92,214,.13) 0%, rgba(148,92,214,0) 64%),
-        radial-gradient(120% 92% at 50% 36%, #0c0d13 0%, #06060a 58%, #000 100%);
+        radial-gradient(58% 44% at 14% 6%,  rgba(96,120,190,.14) 0%, rgba(96,120,190,0) 62%),
+        radial-gradient(50% 38% at 84% 14%, rgba(80,140,170,.10) 0%, rgba(80,140,170,0) 60%),
+        radial-gradient(62% 46% at 50% 100%, rgba(110,90,150,.09) 0%, rgba(110,90,150,0) 64%),
+        radial-gradient(120% 92% at 50% 36%, #101114 0%, #08090c 58%, #000 100%);
       background-attachment:fixed;
       background-repeat:no-repeat;
     }
@@ -223,24 +223,55 @@
       will-change:transform;
       backface-visibility:hidden;
     }
+    /* 光斑改成「边界更清晰 + 更亮」，位移才能被看见 */
     body::before {
-      background:radial-gradient(circle at 30% 28%, rgba(112,142,255,.30) 0%, rgba(112,142,255,0) 58%);
-      animation:drift-a 60s ease-in-out infinite alternate;
+      background:
+        radial-gradient(circle at 28% 26%, rgba(110,140,195,.34) 0%, rgba(110,140,195,.13) 22%, rgba(110,140,195,0) 40%),
+        radial-gradient(circle at 72% 20%, rgba(128,115,178,.28) 0%, rgba(128,115,178,.10) 20%, rgba(128,115,178,0) 38%);
+      animation:drift-a 11s ease-in-out infinite alternate;
     }
     body::after {
-      background:radial-gradient(circle at 70% 64%, rgba(64,200,224,.20) 0%, rgba(64,200,224,0) 60%);
-      animation:drift-b 60s ease-in-out infinite alternate;
-      animation-delay:-18s;
+      background:
+        radial-gradient(circle at 70% 66%, rgba(100,145,190,.30) 0%, rgba(100,145,190,.12) 22%, rgba(100,145,190,0) 42%),
+        radial-gradient(circle at 22% 74%, rgba(135,112,178,.26) 0%, rgba(135,112,178,.10) 20%, rgba(135,112,178,0) 40%);
+      animation:drift-b 15s ease-in-out infinite alternate;
+      animation-delay:-4s;
+    }
+    /* 一道横向扫过的极光带，让「流动」更明确 */
+    html::after {
+      content:"";
+      position:fixed; left:-30%; top:0; width:160%; height:100%;
+      z-index:0; pointer-events:none;
+      background:linear-gradient(100deg,
+        transparent 0%, rgba(130,170,255,.04) 34%, rgba(170,200,255,.075) 50%,
+        rgba(130,170,255,.04) 66%, transparent 100%);
+      animation:aurora 17s ease-in-out infinite;
+      will-change:transform;
+    }
+    @keyframes aurora {
+      0%   { transform:translate3d(-24%,0,0); opacity:.75; }
+      50%  { transform:translate3d(8%,0,0);   opacity:1; }
+      100% { transform:translate3d(-24%,0,0); opacity:.75; }
+    }
+    /* 光标跟随的高光（最直观的互动反馈） */
+    html::before {
+      content:"";
+      position:fixed; left:0; top:0; width:620px; height:620px; margin:-310px 0 0 -310px;
+      z-index:0; pointer-events:none; border-radius:50%;
+      background:radial-gradient(circle, rgba(150,190,255,.12) 0%, rgba(150,190,255,.05) 42%, rgba(150,190,255,0) 70%);
+      transform:translate3d(var(--cx,50vw), var(--cy,40vh), 0);
+      transition:transform .28s cubic-bezier(.22,.61,.36,1);
+      will-change:transform;
     }
     @keyframes drift-a {
-      0%   { transform:translate3d(-5%,-3%,0) scale(1); }
-      50%  { transform:translate3d(3%,2%,0)   scale(1.10); }
-      100% { transform:translate3d(7%,5%,0)   scale(1.03); }
+      0%   { transform:translate3d(-18%,-14%,0) scale(0.90) rotate(-3deg); }
+      50%  { transform:translate3d(6%,8%,0)     scale(1.28) rotate(3deg); }
+      100% { transform:translate3d(22%,16%,0)   scale(1.10) rotate(-2deg); }
     }
     @keyframes drift-b {
-      0%   { transform:translate3d(5%,4%,0)   scale(1.05); }
-      50%  { transform:translate3d(-3%,-2%,0) scale(1); }
-      100% { transform:translate3d(-7%,-5%,0) scale(1.09); }
+      0%   { transform:translate3d(18%,14%,0)   scale(1.14) rotate(3deg); }
+      50%  { transform:translate3d(-8%,-10%,0)  scale(0.88) rotate(-3deg); }
+      100% { transform:translate3d(-22%,-16%,0) scale(1.22) rotate(2deg); }
     }
     .wrap { position:relative; z-index:1; }
 
@@ -248,6 +279,7 @@
     .panel, .kicker, dialog, .dialog-inner {
       background:var(--glass);
       border:1px solid var(--glass-line);
+      position:relative;
       border-radius:var(--r);
       box-shadow:var(--glass-hi), var(--glass-glow), var(--soft);
       backdrop-filter:var(--blur);
@@ -279,8 +311,8 @@
       border-radius:var(--r);
       background-color:var(--glass);
       background-image:
-        linear-gradient(105deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.02) 32%, rgba(255,255,255,0) 50%),
-        linear-gradient(160deg, rgba(48,48,52,.72), rgba(28,28,30,.62));
+        linear-gradient(105deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.03) 32%, rgba(255,255,255,0) 50%),
+        linear-gradient(160deg, rgba(40,58,96,.62), rgba(20,30,52,.48));
       box-shadow:var(--glass-hi), var(--glass-glow), var(--soft);
       backdrop-filter:var(--blur);
       -webkit-backdrop-filter:var(--blur);
@@ -293,16 +325,25 @@
       border:1px solid var(--glass-line);
       border-radius:var(--r);
       color:var(--ink);
-      box-shadow:var(--glass-hi), inset 0 0 16px rgba(255,255,255,.05), 0 3px 10px rgba(0,0,0,.35);
+      box-shadow:
+        var(--glass-hi),
+        inset 0 0 22px rgba(110,170,255,.16),
+        inset 0 -8px 18px rgba(20,50,120,.22),
+        0 0 18px rgba(80,150,255,.14),
+        0 4px 16px rgba(10,30,80,.38);
       backdrop-filter:var(--blur);
       -webkit-backdrop-filter:var(--blur);
       transition:transform .28s var(--spring), filter .24s ease, box-shadow .28s var(--spring), background .24s ease, border-color .24s ease;
     }
     .chip:hover, .mini-btn:hover, .secondary:hover, .text-btn:hover, .personal-item button:hover {
       transform:translateY(-2px);
-      filter:brightness(1.16);
-      border-color:rgba(64,200,224,.45);
-      box-shadow:var(--glass-hi), inset 0 0 22px rgba(64,200,224,.14), var(--lift);
+      filter:brightness(1.20);
+      border-color:rgba(140,195,255,.60);
+      box-shadow:
+        var(--glass-hi),
+        inset 0 0 26px rgba(120,180,255,.24),
+        0 0 26px rgba(90,170,255,.30),
+        var(--lift);
     }
     .chip:active, .mini-btn:active, .secondary:active, .text-btn:active, .personal-item button:active {
       transform:translateY(0) scale(.96);
@@ -322,7 +363,12 @@
       background-image:linear-gradient(180deg, var(--tint-a), var(--tint-b));
       border:1px solid rgba(255,255,255,.22);
       border-radius:var(--r);
-      box-shadow:var(--glass-hi), inset 0 -12px 24px rgba(0,0,0,.22), inset 0 0 22px rgba(64,200,224,.18), 0 12px 28px rgba(0,0,0,.50);
+      box-shadow:
+        var(--glass-hi),
+        inset 0 -12px 24px rgba(10,30,80,.28),
+        inset 0 0 26px rgba(130,185,255,.22),
+        0 0 24px rgba(90,165,255,.22),
+        0 12px 28px rgba(0,0,0,.46);
       backdrop-filter:var(--blur);
       -webkit-backdrop-filter:var(--blur);
       transition:transform .30s var(--spring), filter .24s ease, box-shadow .28s var(--spring), background-color .24s ease;
@@ -449,7 +495,12 @@
       box-shadow:var(--glass-hi), inset 0 0 22px rgba(64,200,224,.18), 0 10px 24px rgba(0,0,0,.45);
     }
     .bz-pane { margin-bottom:10px; }
-    .bz-avoid { margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
+    .bz-avoid { margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
+    .bz-head { display:flex; align-items:flex-end; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .bz-head .chip-group-title { width:auto; margin-bottom:0; }
+    .bz-head-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .bz-note { color:var(--muted); font-size:.82rem; }
+    .bz-all { padding:6px 14px; font-size:.88rem; min-height:44px; }
     .bz-results { grid-template-columns:1fr; margin-top:18px; }
     .bz-results .result { max-width:560px; margin:0 auto; width:100%; }
     .chip-group-title {
@@ -562,12 +613,197 @@
       .bz-actions .main-btn { width:100%; max-width:320px; }
       .bz-toggle-sub { width:100%; }
     }
+
+    /* ====== 互动元素 ====== */
+    /* 1) 抽中瞬间的光环爆发 */
+    .result.burst::before {
+      content:"";
+      position:absolute; left:50%; top:38%;
+      width:16px; height:16px; margin:-8px 0 0 -8px;
+      border-radius:50%;
+      border:2px solid rgba(170,205,255,.75);
+      box-shadow:0 0 24px rgba(120,175,255,.65), inset 0 0 14px rgba(160,200,255,.45);
+      pointer-events:none;
+      animation:burst .85s cubic-bezier(.2,.7,.3,1) forwards;
+    }
+    @keyframes burst {
+      0%   { transform:scale(.4); opacity:1; }
+      60%  { opacity:.55; }
+      100% { transform:scale(14); opacity:0; }
+    }
+    /* 2) 标签点击涟漪 */
+    .chip { position:relative; overflow:hidden; }
+    .chip::after {
+      content:"";
+      position:absolute; left:50%; top:50%;
+      width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:50%;
+      background:radial-gradient(circle, rgba(180,215,255,.85), rgba(180,215,255,0) 70%);
+      opacity:0; transform:scale(0); pointer-events:none;
+    }
+    .chip.ripple::after { animation:ripple .5s ease-out; }
+    @keyframes ripple {
+      0%   { opacity:.9; transform:scale(1); }
+      100% { opacity:0; transform:scale(14); }
+    }
+    /* 3) 结果卡悬停凝光（位移只作用于背景，避免子元素亚像素抖动） */
+    .result { transition:box-shadow .3s ease, filter .3s ease; }
+    .result:hover {
+      box-shadow:var(--glass-hi), var(--glass-glow), 0 0 32px rgba(110,170,255,.26), var(--soft);
+      filter:brightness(1.04);
+    }
+    /* 4) 背景随指针位移 */
+    body::before { transform:translate3d(var(--px,0px), var(--py,0px), 0) scale(var(--ps,1)); }
+    body::after  { transform:translate3d(calc(var(--px,0px) * -1), calc(var(--py,0px) * -1), 0); }
+    @media (prefers-reduced-motion: reduce) { html::after { animation:none !important; } }
+    @media (prefers-reduced-motion: reduce) {
+      .result.burst::before, .chip.ripple::after { animation:none !important; }
+      body::before, body::after { transform:none !important; }
+    }
+
+
+    /* ====== 批注改造：标题 / 分组标题 / 品牌专区头部 玻璃液态化 ====== */
+    /* 批注4：主标题做成液态玻璃胶囊 + 轻微浮动 + 扫光 */
+    h1 {
+      position:relative;
+      display:block;
+      width:fit-content;
+      max-width:100%;
+      margin:14px auto 12px;
+      padding:10px 38px 14px;
+      border-radius:30px;
+      /* 字体沿用全站 iOS 系统字体栈，此处不做字体覆盖 */
+      font-weight:600;
+      /* 持续流动的玻璃光：两层渐变缓慢往返位移，不会一次性划过 */
+      background-image:
+        linear-gradient(100deg,
+          rgba(255,255,255,.05) 0%,
+          rgba(186,216,255,.17) 16%,
+          rgba(255,255,255,.04) 34%,
+          rgba(172,206,255,.15) 56%,
+          rgba(255,255,255,.05) 78%,
+          rgba(186,216,255,.17) 100%),
+        linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.035));
+      background-size:280% 100%, 100% 100%;
+      background-position:0% 50%, 0 0;
+      border:1px solid rgba(190,215,255,.24);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.52),
+        inset 0 -16px 34px rgba(20,50,120,.22),
+        0 0 46px rgba(100,165,255,.20),
+        0 14px 34px rgba(0,0,0,.38);
+      backdrop-filter:blur(14px) saturate(180%);
+      -webkit-backdrop-filter:blur(14px) saturate(180%);
+      animation:h1Float 6.5s ease-in-out infinite, h1Flow 14s ease-in-out infinite alternate;
+      overflow:hidden;
+    }
+    h1::after {
+      content:"";
+      position:absolute; inset:-20% -10%;
+      background:radial-gradient(60% 160% at 34% 10%, rgba(255,255,255,.20) 0%, rgba(255,255,255,0) 62%);
+      pointer-events:none;
+      animation:h1Glow 9s ease-in-out infinite;
+    }
+    @keyframes h1Float {
+      0%,100% { transform:translateY(0) rotate(-.25deg); }
+      50%     { transform:translateY(-7px) rotate(.25deg); }
+    }
+    /* 持续流动：渐变底缓慢往返，永不停止 */
+    @keyframes h1Flow {
+      0%   { background-position:0% 50%, 0 0; }
+      100% { background-position:100% 50%, 0 0; }
+    }
+    /* 柔光缓慢漂移呼吸 */
+    @keyframes h1Glow {
+      0%,100% { transform:translate3d(-8%,0,0); opacity:.55; }
+      50%     { transform:translate3d(8%,0,0);  opacity:.95; }
+    }
+
+    /* 批注5：副标题做成玻璃胶囊 + 呼吸浮动 */
+    header p {
+      display:inline-block;
+      margin:0;
+      padding:7px 20px;
+      border-radius:999px;
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border:1px solid rgba(180,210,255,.16);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.34), 0 0 26px rgba(90,160,255,.12);
+      backdrop-filter:blur(10px) saturate(160%);
+      -webkit-backdrop-filter:blur(10px) saturate(160%);
+      animation:pFloat 7.5s ease-in-out infinite;
+    }
+    @keyframes pFloat {
+      0%,100% { transform:translateY(0); opacity:.92; }
+      50%     { transform:translateY(-4px); opacity:1; }
+    }
+
+    /* 批注2/3：分组标题居中 + 液态玻璃胶囊 */
+    .field-title {
+      justify-content:center;
+      width:fit-content;
+      margin:0 auto 12px;
+      padding:9px 20px;
+      border-radius:var(--r);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.025));
+      border:1px solid rgba(185,212,255,.20);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.40),
+        inset 0 -10px 22px rgba(20,50,120,.18),
+        0 0 24px rgba(95,160,255,.14),
+        0 6px 18px rgba(0,0,0,.30);
+      backdrop-filter:blur(12px) saturate(170%);
+      -webkit-backdrop-filter:blur(12px) saturate(170%);
+    }
+    .field-title .ico-wrap { color:var(--deep); }
+
+    /* 批注1：连锁品牌专区折叠条居中 + 液态玻璃 */
+    .brand-zone { text-align:center; }
+    .bz-toggle {
+      width:auto;
+      max-width:100%;
+      margin:0 auto;
+      justify-content:center;
+      padding:12px 24px;
+      border-radius:var(--r);
+      background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.03));
+      border:1px solid rgba(185,212,255,.24);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.48),
+        inset 0 -12px 26px rgba(20,50,120,.20),
+        0 0 32px rgba(95,160,255,.18),
+        0 10px 26px rgba(0,0,0,.34);
+      backdrop-filter:blur(14px) saturate(180%);
+      -webkit-backdrop-filter:blur(14px) saturate(180%);
+    }
+    .bz-toggle:hover { filter:brightness(1.08); }
+    .bz-chev { margin-left:10px; }
+    .bz-body { text-align:left; }
+
+    /* 全局高光：玻璃表面顶部更亮 + 底边冷色反光 */
+    :root {
+      --glass-hi:inset 0 1px 0 rgba(255,255,255,.46), inset 0 -1px 0 rgba(140,180,255,.12);
+    }
+    .panel::after {
+      content:"";
+      position:absolute; left:0; right:0; top:0; height:1px;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent);
+      pointer-events:none;
+    }
+    .result:hover .food-icon { filter:drop-shadow(0 0 12px rgba(150,195,255,.55)); }
+
+    @media (max-width:640px) {
+      h1 { padding:8px 20px 11px; border-radius:22px; margin:6px auto 10px; }
+      header p { padding:6px 14px; font-size:.94rem; }
+      .field-title { padding:8px 16px; font-size:1rem; }
+      .bz-toggle { padding:11px 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      h1, h1::after, header p { animation:none !important; }
+    }
   </style>
 </head>
 <body>
   <main class="wrap">
     <header>
-      <div class="kicker">吃什么？听天由命吧！</div>
       <h1>今天要吃什么呢？</h1>
       <p>偏好与忌口or完全随机...</p>
     </header>
@@ -646,7 +882,13 @@
         </div>
 
         <div class="bz-pane" id="bzPaneBrand">
-          <p class="chip-group-title">参与抽取的品牌（默认全选，点一下取消）</p>
+          <div class="bz-head">
+            <p class="chip-group-title">参与抽取的品牌</p>
+            <div class="bz-head-right">
+              <span class="bz-note">默认不选 · 点一下选中一个品牌</span>
+              <button type="button" class="chip bz-all" id="bzSelectAll">全选</button>
+            </div>
+          </div>
           <div class="chips" id="bzBrands"></div>
         </div>
 
@@ -654,11 +896,10 @@
           <p class="chip-group-title">想吃的品类（可多选）</p>
           <div class="chips" id="bzCats"></div>
           <p class="chip-hint">该模式仅覆盖这 6 个品类；中式快餐与小吃的品牌请在左侧模式里抽。</p>
-        </div>
-
-        <div class="bz-avoid">
-          <p class="chip-group-title">不想吃的品牌（勾选后两种模式都会排除）</p>
-          <div class="chips" id="bzAvoid"></div>
+          <div class="bz-avoid">
+            <p class="chip-group-title">不想吃的品牌（勾选后本模式会排除）</p>
+            <div class="chips" id="bzAvoid"></div>
+          </div>
         </div>
 
         <div class="bz-actions">
@@ -857,6 +1098,209 @@ const drinks = [{"name":"多肉葡萄（喜茶）","type":"果茶","tags":[],"re
   });
 })();
 
+
+// ============================================================
+// 互动增强：指针视差 / 标签涟漪 / 抽中光爆
+// ============================================================
+(function(){
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  if (reduce || coarse) return;
+
+
+  /* 0) 光标跟随高光：把指针位置写入 CSS 变量 */
+  document.addEventListener('pointermove', function(e){
+    document.documentElement.style.setProperty('--cx', e.clientX + 'px');
+    document.documentElement.style.setProperty('--cy', e.clientY + 'px');
+  }, { passive:true });
+
+  /* 1) 指针视差：背景光斑与卡片轻微跟随 */
+  let raf = null, tx = 0, ty = 0;
+  document.addEventListener('pointermove', function(e){
+    tx = (e.clientX / window.innerWidth - .5);
+    ty = (e.clientY / window.innerHeight - .5);
+    if (raf) return;
+    raf = requestAnimationFrame(function(){
+      raf = null;
+      const root = document.documentElement;
+      root.style.setProperty('--px', (tx * 130).toFixed(1) + 'px');
+      root.style.setProperty('--py', (ty * 110).toFixed(1) + 'px');
+    });
+  }, { passive:true });
+
+  /* 2) 标签点击涟漪 */
+  document.addEventListener('click', function(e){
+    const chip = e.target.closest && e.target.closest('.chip');
+    if (!chip) return;
+    chip.classList.remove('ripple');
+    void chip.offsetWidth;
+    chip.classList.add('ripple');
+    setTimeout(function(){ chip.classList.remove('ripple'); }, 520);
+  }, true);
+})();
+
+/* 3) 抽中光爆：给结果卡加一次性爆发环 */
+function bzBurst(target){
+  const el = $(target);
+  if (!el) return;
+  el.classList.remove('burst');
+  void el.offsetWidth;
+  el.classList.add('burst');
+  setTimeout(function(){ el.classList.remove('burst'); }, 900);
+}
+
+const DRINK_TYPES = ['奶茶','果茶','咖啡','酸奶','纯茶','奶昔','冰沙','冰淇淋','热饮','健康饮品','汽水','仙草','芝士茶'];
+// === 图标精准匹配：按菜名关键词分配贴切图案（含饮品专项规则） ===
+(function(){
+  /* 饮品专项规则（品牌专区茶饮类的名字常无线索，如「伯牙绝弦」，靠 type 判定） */
+  const DRINK_RULES = [
+    [/可可|阿华田|巧克力|摩卡可可/, '🍫'],
+    [/冰沙|星冰乐|瑞纳冰|冰冰乐|摩天|圣代|冰淇淋|甜筒|冰砖/, '🍦'],
+    [/酸奶/, '🥣'],
+    [/牛乳|牛奶|奶昔|养乐多|豆乳/, '🥛'],
+    [/咖啡|拿铁|美式|摩卡|卡布|玛奇朵|澳白|馥芮|冷萃|浓缩/, '☕'],
+    [/奶茶|波波|珍奶|珍珠|芋泥|仙草|烤奶|奶绿|奶芙|酪酪|玉麒麟|绿妍|黑砖|泷珠/, '🧋'],
+    [/莓|草莓/, '🍓'],
+    [/葡萄|青提/, '🍇'],
+    [/芒果|芒芒|杨枝/, '🥭'],
+    [/桃/, '🍑'],
+    [/柠檬|青柠/, '🍋'],
+    [/橙|橘|柚/, '🍊'],
+    [/百香|双响炮|荔枝|红果|桑葚/, '🍹'],
+    [/西瓜/, '🍉'],
+    [/气泡|苏打|矿泉/, '🫧'],
+    [/可乐|雪碧|汽水/, '🥤'],
+    [/茶|毛峰|锡兰|乌龙|普洱|兰香|木兰|红尘|烟火|纸鸢|少年|浮生|绝弦|糯山|山茶|花西子/, '🍵']
+  ];
+
+  const FOOD_RULES = [
+    /* —— 特例优先（避免被通用规则抢走）—— */
+    [/巨无霸/, '🍔'],
+    [/鸡蛋灌饼|手抓饼|灌饼|煎饼|春饼|荷叶饼/, '🫓'],
+    [/苹果/, '🍎'],
+    [/新地|圣代|冰淇淋|甜筒|雪糕/, '🍦'],
+    [/早晨全餐|全餐|早餐/, '🍳'],
+    [/广式早茶|早茶/, '🫖'],
+    [/年糕/, '🍡'],
+    [/卤花生|花生/, '🥜'],
+    [/猪耳|肺片|肥肠|五花|红烧肉|扣肉|烧肉|一碗香/, '🍖'],
+    [/牛排|牛柳|牛腩|肥牛|牛肉|牛肚/, '🥩'],
+    [/凤爪|鸡爪|手枪腿|鸡翅|烤翅|翅/, '🍗'],
+    [/饺/, '🥟'],
+    /* 饮品（关键词明确时） */
+    [/奶茶|波波|珍奶|波霸|奶绿|奶盖|烧仙草/, '🧋'],
+    [/咖啡|拿铁|美式|摩卡|卡布|玛奇朵|澳白|馥芮|冷萃|星冰乐/, '☕'],
+    [/酸奶/, '🥣'],
+    [/豆浆|牛奶|奶昔/, '🥛'],
+    [/气泡水|矿泉水|苏打/, '🫧'],
+    [/雪碧|汽水|百事可乐|可口可乐|^(冰镇)?可乐$/, '🥤'],
+    [/橙汁|果汁|柠檬水|柠檬茶|水果茶|果茶|杨枝甘露|百香果|酸梅/, '🍹'],
+    [/纯茶|绿茶|红茶|乌龙|普洱|龙井|碧螺春|茉莉/, '🍵'],
+    /* 蛋奶豆（必须在「鸡」之前，避免鸡蛋被判成鸡肉） */
+    [/鸡蛋|滑蛋|蒸蛋|蛋$|蛋羹|蛋花|蛋饼|蛋炒|卤蛋|鹌鹑蛋|咸蛋|蛋黄/, '🥚'],
+    [/豆腐|豆花|腐竹|豆皮|豆泡|豆干|千页|鹰嘴豆/, '🫘'],
+    /* 主食 */
+    [/披萨|比萨/, '🍕'],
+    [/汉堡|堡(?!垒)/, '🍔'],
+    [/热狗/, '🌭'],
+    [/塔可|taco/i, '🌮'],
+    [/嫩牛五方|鸡肉卷|牛肉卷|卷饼|润饼|春卷|卷$/, '🌯'],
+    [/三明治|帕尼尼|吐司|恰巴特|法棍|焙果|麦芬/, '🥪'],
+    [/薯条/, '🍟'],
+    [/薯格|薯角|薯饼/, '🥔'],
+    [/寿司|刺身|鳗鱼/, '🍣'],
+    [/饭团|肉粽|甜粽|糯米鸡/, '🍙'],
+    [/饺子|水饺|蒸饺|煎饺|锅贴|馄饨|抄手|云吞|烧卖|汤包|小笼|生煎|包子|豆沙包|叉烧包|流沙包|水煎包|韭菜盒子|沙县/, '🥟'],
+    [/面(?!包)|米线|米粉|粉$|河粉|粿条|螺蛳粉|粉丝|叻沙|揪片|剔尖|凉皮|擀面皮|片儿川|蚂蚁上树/, '🍜'],
+    [/咖喱/, '🍛'],
+    [/便当|丼|盖饭|煲仔饭|炒饭|拌饭|手抓饭|饭$|米饭|粽/, '🍚'],
+    [/粥|羹/, '🥣'],
+    [/火锅|砂锅|锅$|煲$|炖|焖|涮|寿喜烧|冒菜|毛血旺|叻沙|铁板/, '🍲'],
+    /* 甜品（冰淇淋要在蛋糕之前） */
+    [/冰淇淋|圣代|甜筒|冰沙|雪糕|摩天/, '🍦'],
+    [/蛋挞/, '🥮'],
+    [/蛋糕|提拉米苏|瑞士卷|马卡龙|芝士|布丁|奶冻|奶糕|流沙|香芋派|派$/, '🍰'],
+    /* 蛋白质 */
+    [/鸡|禽/, '🍗'],
+    [/牛肉|牛柳|牛腩|肥牛|牛肚|牛肉丸|嫩牛|猪肋排|肋排/, '🥩'],
+    [/培根/, '🥓'],
+    [/排骨|猪蹄|五花|猪排|里脊|肉丸|烤串|羊肉|羊排|烤肉|肉片|肉丝|肉沫|肉末|腊|卤味|香肠|火腿|脑花/, '🍖'],
+    [/虾|天妇罗|扇贝/, '🍤'],
+    [/鱼|酸菜鱼/, '🐟'],
+    [/蟹/, '🦀'],
+    [/小龙虾|龙虾/, '🦞'],
+    [/鱿鱼/, '🦑'],
+    [/蛙/, '🐸'],
+    [/章鱼|八爪/, '🐙'],
+    [/生蚝|蚝/, '🦪'],
+    [/田螺|螺蛳|花甲|蛤|螺$/, '🐚'],
+    [/兔/, '🐰'],
+    [/鸭|鹅/, '🦆'],
+    /* 蔬菜菌菇 */
+    [/番茄|西红柿/, '🍅'],
+    [/茄子/, '🍆'],
+    [/土豆|洋芋/, '🥔'],
+    [/西兰花|西蓝花|花菜|娃娃菜|青菜|生菜|油麦菜|菠菜|白菜|包菜|泡菜|榨菜|酸菜|四季豆|豆角|青椒|韭菜|豆芽|素三鲜|四季鲜蔬|海藻|海带|毛豆/, '🥬'],
+    [/菌|菇|木耳/, '🍄'],
+    [/玉米/, '🌽'],
+    [/红薯|番薯|地瓜/, '🍠'],
+    [/南瓜/, '🎃'],
+    [/黄瓜|青瓜/, '🥒'],
+    [/胡萝卜|萝卜/, '🥕'],
+    [/洋葱/, '🧅'],
+    [/藕|笋|竹笋/, '🎋'],
+    [/栗/, '🌰'],
+    [/椰/, '🥥'],
+    [/菠萝|凤梨/, '🍍'],
+    [/牛油果|酪梨/, '🥑'],
+    [/柠檬/, '🍋'],
+    [/桃/, '🍑'],
+    [/草莓|莓/, '🍓'],
+    [/葡萄|青提/, '🍇'],
+    [/芒果|榴莲/, '🥭'],
+    [/橙|橘|柑/, '🍊'],
+    [/西瓜/, '🍉'],
+    [/蓝莓|桑葚|杨梅/, '🫐'],
+    [/樱桃|车厘子/, '🍒'],
+    /* 面点烘焙 */
+    [/月饼|蛋黄酥/, '🥮'],
+    [/锅盔|饼|馍|泡馍|烤冷面|凉皮/, '🫓'],
+    [/油条/, '🥖'],
+    [/面包|馒头|花卷/, '🍞'],
+    [/可颂|牛角/, '🥐'],
+    [/松饼|热香饼|大阪烧|广岛烧|御好烧/, '🥞'],
+    [/曲奇|饼干|薯片/, '🍪'],
+    [/巧克力/, '🍫'],
+    [/布丁/, '🍮'],
+    [/爆米花/, '🍿'],
+    [/蜂蜜/, '🍯'],
+    /* 沙拉轻食 */
+    [/沙拉|轻食|能量碗|蔬菜碗|水果捞|凉拌|拌菜/, '🥗'],
+    /* 兜底 */
+    [/串|关东煮|烧烤|居酒屋|小郡肝/, '🍢'],
+    [/丸/, '🍡'],
+    [/汤|面汤/, '🍲'],
+    [/筷|炒/, '🥢'],
+    [/辣|麻/, '🌶️'],
+    [/饭|粮|米/, '🍚'],
+    [/燕麦|麦/, '🌾'],
+    [/营养碗|拼盘/, '🍱']
+  ];
+
+  function pick(name, isDrink){
+    const rules = isDrink ? DRINK_RULES.concat(FOOD_RULES) : FOOD_RULES;
+    for (let i = 0; i < rules.length; i++) if (rules[i][0].test(name)) return rules[i][1];
+    return isDrink ? '🧋' : '🍽️';
+  }
+  window.__pickFoodIcon = pick;
+
+  /* 菜品 */
+  baseFoods.forEach(function(f){
+    const isD = (typeof DRINK_TYPES !== 'undefined') && DRINK_TYPES.indexOf(f.type) > -1;
+    f.icon = pick(f.name, isD);
+  });
+})();
+
 // === 状态 ===
 let custom = JSON.parse(localStorage.getItem('lunch-lottery-custom') || '[]');
 let history = JSON.parse(localStorage.getItem('lunch-lottery-history') || '[]');
@@ -904,6 +1348,7 @@ function showResult(target, item, label) {
       '<button class="mini-btn primary" onclick="accept(' + (isDrink ? "'drink'" : "'food'") + ')">👍 就它了</button>' +
     '</div>';
   fitName(r);
+  bzBurst(target);
 }
 
 function showEmpty(target, text) {
@@ -1913,6 +2358,15 @@ BRAND_MENU.forEach(function(b){
   });
 });
 
+// 品牌单品图标：茶饮咖啡类走饮品规则，其余走菜品规则
+if (typeof window !== 'undefined' && window.__pickFoodIcon) {
+  const TEA_CATS = ['奶茶/咖啡'];
+  BRAND_ITEMS.forEach(function(it){
+    const isD = it.cats.some(function(c){ return TEA_CATS.indexOf(c) > -1; });
+    it.icon = window.__pickFoodIcon(it.name, isD);
+  });
+}
+
 const BZ = { mode:'brand', lastBrand:'', lastItem:null };
 
 function bzSay(msg){ $('#bzNotice').textContent = msg || ''; }
@@ -1938,43 +2392,93 @@ function bzPool(items){
   return pool;
 }
 
-function bzAvoidSet(){ return new Set(bzSel('bzAvoid','bzAvoid')); }
-
 /* 偏好软匹配落空时，记录下来给用户明确提示，而不是静默忽略 */
 let bzSoftNote = '';
 
-function bzDrawBrand(){
-  bzSoftNote = '';
-  const avoided = bzAvoidSet();
-  const chosen = bzSel('bzBrands','bzBrand').filter(function(b){ return !avoided.has(b); });
-  if (!chosen.length) { bzSay('所选品牌都被排除了，取消几个排除再试。'); return; }
-  const pool = bzPool(BRAND_ITEMS.filter(function(it){ return chosen.indexOf(it.brand) > -1; }));
-  if (!pool.length) { bzSay('这些筛选条件下没有合适的品牌单品，放宽一下再试。'); return; }
-  const brands = [...new Set(pool.map(function(it){ return it.brand; }))];
-  const brand = pickRandom(brands);
-  const item = pickRandom(pool.filter(function(it){ return it.brand === brand; }));
-  bzShow(brand, item, bzSoftNote);
+/* ===== 品牌专区交互：抽品牌 → 用户确认 → 再抽单品 ===== */
+BZ.stage = 'idle';
+BZ.pendingBrand = null;
+BZ.pendingPool = null;
+
+/* 通用滚动动画：list 为候选数组，fmt 返回 {icon,name,type} */
+function bzRoll(list, fmt, label, ticks, done){
+  const r = $('#bzResult');
+  r.classList.remove('pop');
+  r.classList.add('rolling');
+  r.innerHTML = '<div class="food-icon">🏪</div><div class="food-name">…</div>' +
+                '<span class="food-type">' + label + '</span>';
+  let i = 0;
+  const t = setInterval(function(){
+    const f = fmt(list[i % list.length]);
+    r.querySelector('.food-icon').textContent = f.icon;
+    r.querySelector('.food-name').textContent = f.name;
+    r.querySelector('.food-type').textContent = f.type;
+    i++;
+    if (i >= ticks) { clearInterval(t); done(); }
+  }, 70);
 }
 
-function bzDrawCat(){
-  bzSoftNote = '';
-  const cats = bzSel('bzCats','bzCat');
-  if (!cats.length) { bzSay('先选一个品类再抽。'); return; }
-  const avoided = bzAvoidSet();
-  const pool = bzPool(BRAND_ITEMS.filter(function(it){
-    return it.cats.indexOf(cats[0]) > -1 && cats.some(function(c){ return it.cats.indexOf(c) > -1; }) && !avoided.has(it.brand);
-  }));
-  if (!pool.length) { bzSay('该品类下没有符合筛选的品牌单品，换个品类或放宽筛选。'); return; }
-  const brands = [...new Set(pool.map(function(it){ return it.brand; }))];
-  const brand = pickRandom(brands);
-  const item = pickRandom(pool.filter(function(it){ return it.brand === brand; }));
-  bzShow(brand, item, bzSoftNote);
+/* 第一步：从候选品牌里抽一个，然后停下来等用户确认 */
+function bzPickBrand(kind, pool, brandPool){
+  BZ.pendingKind = kind;
+  BZ.pendingPool = pool;
+  bzSay('');
+  bzRoll(brandPool, function(b){ return { icon:'🏪', name:b, type:'正在抽品牌…' }; },
+         '正在抽品牌…', 9, function(){
+    const brand = pickRandom(brandPool);
+    BZ.pendingBrand = brand;
+    BZ.stage = 'confirm';
+    bzShowConfirm(brand, kind);
+  });
 }
 
-function bzDraw(){ if (BZ.mode === 'cat') bzDrawCat(); else bzDrawBrand(); }
+/* 品牌确认卡：确定 / 换一个 */
+function bzShowConfirm(brand, kind){
+  const r = $('#bzResult');
+  r.classList.remove('rolling');
+  r.classList.add('pop');
+  const scope = (kind === 'cat') ? '该品类的单品' : '这家的单品';
+  r.innerHTML =
+    '<div class="food-icon">🏪</div>' +
+    '<div class="food-name">' + brand + '</div>' +
+    '<span class="food-type">抽中的品牌</span>' +
+    '<p class="food-reason">确定要抽这家吗？点「确定」后会从' + scope + '里随机挑一个。</p>' +
+    '<div class="result-actions">' +
+      '<button class="mini-btn" onclick="bzRerollBrand()">🎲 换个品牌</button>' +
+      '<button class="mini-btn primary" onclick="bzConfirmBrand()">✅ 确定这个品牌</button>' +
+    '</div>';
+  fitName(r);
+  bzSay('请先确认品牌 —— 确认后才会抽取单品。');
+}
 
+/* 换一个品牌：重新走一遍抽品牌 */
+function bzRerollBrand(){
+  BZ.stage = 'idle';
+  BZ.pendingBrand = null;
+  bzDraw();
+}
+
+/* 确定品牌：第二步，从这家抽单品 */
+function bzConfirmBrand(){
+  const brand = BZ.pendingBrand;
+  const pool = BZ.pendingPool || [];
+  BZ.stage = 'idle';
+  BZ.pendingBrand = null;
+  if (!brand) { bzSay('品牌信息丢了，请重新抽一次。'); return; }
+  const items = pool.filter(function(it){ return it.brand === brand; });
+  if (!items.length) { bzSay('这家没有符合条件的单品，换一家试试。'); return; }
+  bzSay('');
+  bzRoll(items, function(it){
+      return { icon: it.icon || '🍽️', name: it.name, type: '正在挑 ' + brand + ' 的单品…' };
+    }, '正在挑 ' + brand + ' 的单品…', 9, function(){
+    bzShow(brand, pickRandom(items), bzSoftNote);
+  });
+}
+
+/* 最终结果卡：品牌 + 单品 */
 function bzShow(brand, item, note){
-  BZ.lastBrand = brand; BZ.lastItem = item;
+  BZ.lastBrand = brand;
+  BZ.lastItem = item;
   const r = $('#bzResult');
   r.classList.remove('pop', 'rolling');
   void r.offsetWidth;
@@ -1990,7 +2494,48 @@ function bzShow(brand, item, note){
     '</div>';
   bzSay(note || '');
   fitName(r);
+  bzBurst('#bzResult');
   addHistory({ name: item.name, type: brand + ' · ' + item.label, icon: item.icon }, '品牌');
+}
+
+/* 确认结果 */
+function bzAccept(){
+  const r = $('#bzResult');
+  r.querySelectorAll('.mini-btn').forEach(function(b){ b.remove(); });
+  const note = document.createElement('div');
+  note.style.cssText = 'color:var(--deep);font-size:.95rem;margin-top:8px;';
+  note.textContent = '✅ 好，就去这家！';
+  r.appendChild(note);
+}
+
+/* 模式1：从用户勾选的品牌里抽一个 */
+function bzDrawBrand(){
+  bzSoftNote = '';
+  const chosen = bzSel('bzBrands','bzBrand');
+  if (!chosen.length) { bzSay('先点选想抽的品牌（至少 1 个），或点右上角「全选」。'); return; }
+  const pool = bzPool(BRAND_ITEMS.filter(function(it){ return chosen.indexOf(it.brand) > -1; }));
+  if (!pool.length) { bzSay('这些筛选条件下没有合适的品牌单品，放宽一下再试。'); return; }
+  const brands = [...new Set(pool.map(function(it){ return it.brand; }))];
+  bzPickBrand('brand', pool, brands);
+}
+
+/* 模式2：先选品类，再从做该品类的品牌里抽一个（排除不想要的品牌） */
+function bzDrawCat(){
+  bzSoftNote = '';
+  const cats = bzSel('bzCats','bzCat');
+  if (!cats.length) { bzSay('先选一个品类再抽。'); return; }
+  const excl = bzSel('bzAvoid','bzAvoid');
+  const pool = bzPool(BRAND_ITEMS.filter(function(it){
+    return cats.some(function(c){ return it.cats.indexOf(c) > -1; }) && excl.indexOf(it.brand) < 0;
+  }));
+  if (!pool.length) { bzSay('该品类下没有可用品牌（可能都被排除了），换个品类或少排除几个。'); return; }
+  const brands = [...new Set(pool.map(function(it){ return it.brand; }))];
+  bzPickBrand('cat', pool, brands);
+}
+
+function bzDraw(){
+  if (BZ.stage === 'confirm') { bzSay('请先点「确定这个品牌」或「换个品牌」。'); return; }
+  if (BZ.mode === 'cat') bzDrawCat(); else bzDrawBrand();
 }
 
 function bzAccept(){
@@ -2002,13 +2547,24 @@ function bzAccept(){
   r.appendChild(note);
 }
 
+/* 「全选」按钮状态同步 */
+function bzSyncAll(){
+  const chips = $$('#bzBrands .chip');
+  const btn = $('#bzSelectAll');
+  if (!btn) return;
+  const allOn = chips.length > 0 && chips.every(function(c){ return c.classList.contains('active'); });
+  btn.classList.toggle('active', allOn);
+  btn.textContent = allOn ? '取消全选' : '全选';
+}
+
 function bzRenderChips(){
   let bh = '';
   BRAND_GROUPS.forEach(function(g){
     const list = g.brands.filter(function(b){ return BRAND_MENU.some(function(m){ return m.brand === b; }); });
     if (!list.length) return;
     bh += '<p class="chip-group-title">' + g.g + '</p>';
-    list.forEach(function(b){ bh += '<button type="button" class="chip active" data-bz-brand="' + b + '">' + b + '</button>'; });
+    // 默认不选中，需手动点选
+    list.forEach(function(b){ bh += '<button type="button" class="chip" data-bz-brand="' + b + '">' + b + '</button>'; });
   });
   $('#bzBrands').innerHTML = bh;
   $('#bzCats').innerHTML = BRAND_CATS.map(function(c){ return '<button type="button" class="chip" data-bz-cat="' + c + '">' + c + '</button>'; }).join('');
@@ -2020,9 +2576,13 @@ function bzRenderChips(){
     list.forEach(function(b){ ah += '<button type="button" class="chip" data-bz-avoid="' + b + '">' + b + '</button>'; });
   });
   $('#bzAvoid').innerHTML = ah;
-  $$('#bzBrands .chip, #bzCats .chip, #bzAvoid .chip').forEach(function(btn){
+  $$('#bzBrands .chip, #bzCats .chip').forEach(function(btn){
+    btn.addEventListener('click', function(){ btn.classList.toggle('active'); bzSyncAll(); });
+  });
+  $$('#bzAvoid .chip').forEach(function(btn){
     btn.addEventListener('click', function(){ btn.classList.toggle('active'); });
   });
+  bzSyncAll();
   var meta = $('#bzMeta');
   if (meta) meta.textContent = BRAND_MENU.length + ' 个品牌 · ' + BRAND_ITEMS.length + ' 款单品 · 点此展开';
 }
@@ -2064,15 +2624,25 @@ $$('.bz-mode').forEach(function(btn){
     $$('.bz-mode').forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
     btn.classList.add('active'); btn.setAttribute('aria-selected','true');
     BZ.mode = btn.dataset.mode;
+    BZ.stage = 'idle'; BZ.pendingBrand = null;
     $('#bzPaneBrand').hidden = (BZ.mode !== 'brand');
     $('#bzPaneCat').hidden = (BZ.mode !== 'cat');
     bzSay('');
   });
 });
+$('#bzSelectAll').addEventListener('click', function(){
+  const chips = $$('#bzBrands .chip');
+  const allOn = chips.length > 0 && chips.every(function(c){ return c.classList.contains('active'); });
+  chips.forEach(function(c){ c.classList.toggle('active', !allOn); });
+  bzSyncAll();
+});
 $('#bzDraw').addEventListener('click', bzDraw);
 $('#bzReset').addEventListener('click', function(){
-  $$('#bzBrands .chip').forEach(function(b){ b.classList.add('active'); });
-  $$('#bzCats .chip, #bzAvoid .chip').forEach(function(b){ b.classList.remove('active'); });
+  $$('#bzBrands .chip').forEach(function(b){ b.classList.remove('active'); });
+  $$('#bzCats .chip').forEach(function(b){ b.classList.remove('active'); });
+  $$('#bzAvoid .chip').forEach(function(b){ b.classList.remove('active'); });
+  BZ.stage = 'idle'; BZ.pendingBrand = null; BZ.pendingPool = null;
+  bzSyncAll();
   showEmpty('#bzResult', '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9z"/><path d="M3 9l1.6-4.2A1 1 0 0 1 5.5 4h13a1 1 0 0 1 .9.8L21 9"/><path d="M9 20v-5h6v5"/></svg> 点击上方按钮，从连锁品牌里抽一家');
   bzSoftNote = '';
   bzSay('');
