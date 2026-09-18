@@ -77,8 +77,11 @@
     
 
     /* === 饮品偏好栏 === */
-    .drink-avoids { display:flex; align-items:center; gap:8px; justify-content:center; flex-wrap:wrap; margin:0 0 18px; }
-    .drink-avoids .da-label { color:var(--muted); font-size:.98rem; }
+    /* 饮品偏好：两组各自换行，避免「奶茶」被拆到上一行 */
+    .drink-avoids { display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; margin:0 0 18px; }
+    .da-group { display:flex; align-items:center; flex-wrap:wrap; gap:8px; min-width:0; }
+    .da-group + .da-group { border-left:1px solid var(--line); padding-left:14px; }
+    .drink-avoids .da-label { color:var(--muted); font-size:.98rem; display:inline-flex; align-items:center; gap:.3em; white-space:nowrap; line-height:1.2; }
     .drink-avoids .chip { padding:5px 11px; font-size:.9rem; }
     .drink-avoids .chip.active { background:linear-gradient(135deg,rgba(255,55,95,.34),rgba(255,55,95,.18)); border-color:rgba(255,55,95,.18); box-shadow:0 5px 12px rgba(201,120,131,.2); }
     /* === 抽签按钮行 === */
@@ -113,9 +116,12 @@
       .draw-drink-wrap { width:100%; display:flex; flex-direction:column; align-items:center; gap:0; }
       .with-drink-row { margin-top:12px; }
       .with-drink-row label { font-size:.95rem; }
-      .drink-avoids { gap:7px; margin-bottom:14px; }
+      /* 移动端：两组各占整块，标签独占一行，chip 左对齐（与上方偏好/忌口一致） */
+      .drink-avoids { flex-direction:column; align-items:stretch; gap:12px; margin-bottom:14px; }
+      .da-group { justify-content:flex-start; gap:8px; }
+      .da-group + .da-group { border-left:0; padding-left:0; border-top:1px solid var(--line); padding-top:12px; }
+      .drink-avoids .da-label { width:100%; font-size:.92rem; text-align:left; }
       .drink-avoids .chip { padding:7px 12px; min-height:44px; }
-      .da-label { font-size:.92rem; width:100%; text-align:center; margin-bottom:2px; }
       .results { grid-template-columns:1fr; gap:12px; margin-top:16px; }
       .result { min-height:180px; padding:20px 14px; }
       .result::after { font-size:1.2rem; letter-spacing:12px; bottom:12px; }
@@ -144,6 +150,7 @@
       h1 { font-size:1.85rem !important; }
       .main-btn { padding:13px 20px; font-size:1.1rem; min-height:48px; }
       .chip { padding:7px 11px; font-size:.9rem; min-height:44px; }
+      .drink-avoids .chip { padding:7px 9px; font-size:.86rem; }
       .wrap { padding:14px 10px 28px; }
       .panel { padding:14px 11px; border-radius:var(--r); }
       .result { min-height:160px; padding:16px 10px; }
@@ -453,8 +460,6 @@
     .chip-hint {
       width:100%; margin:8px 0 0; color:var(--muted); font-size:.82rem; line-height:1.5;
     }
-    .da-divider { width:1px; height:22px; background:var(--line); }
-    .da-sub { color:var(--muted); font-size:.92rem; }
     .ico-wrap { display:inline-flex; align-items:center; color:var(--deep); }
     .ico { width:1.15em; height:1.15em; display:inline-block; vertical-align:-.18em; margin-right:.34em; flex:none; }
     .brand-zone .main-btn .ico, .brand-zone .text-btn .ico { color:currentColor; }
@@ -596,16 +601,19 @@
         </div>
       </div>
       <div class="drink-avoids" id="drinkAvoids">
-        <span class="da-label"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12l-1.2 15.2A2 2 0 0 1 14.8 21H9.2a2 2 0 0 1-2-1.8L6 4z"/><path d="M7 10h10"/><path d="M12 4V2"/></svg> 饮品偏好：</span>
-        <button class="chip" data-dtag="咖啡因">不含咖啡因</button>
-        <button class="chip" data-dtag="茶底">不要茶底</button>
-        <span class="da-divider"></span>
-        <span class="da-sub">想喝的品类：</span>
-        <button class="chip" data-dtag="奶茶">奶茶</button>
-        <button class="chip" data-dtag="果茶">果茶</button>
-        <button class="chip" data-dtag="咖啡">咖啡</button>
-        <button class="chip" data-dtag="酸奶">酸奶</button>
-        <button class="chip" data-dtag="纯茶">纯茶</button>
+        <div class="da-group">
+          <span class="da-label"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12l-1.2 15.2A2 2 0 0 1 14.8 21H9.2a2 2 0 0 1-2-1.8L6 4z"/><path d="M7 10h10"/><path d="M12 4V2"/></svg> 饮品偏好：</span>
+          <button class="chip" data-dtag="咖啡因">不含咖啡因</button>
+          <button class="chip" data-dtag="茶底">不要茶底</button>
+        </div>
+        <div class="da-group">
+          <span class="da-label">想喝的品类：</span>
+          <button class="chip" data-dtag="奶茶">奶茶</button>
+          <button class="chip" data-dtag="果茶">果茶</button>
+          <button class="chip" data-dtag="咖啡">咖啡</button>
+          <button class="chip" data-dtag="酸奶">酸奶</button>
+          <button class="chip" data-dtag="纯茶">纯茶</button>
+        </div>
       </div>
       <div class="draw-btns">
         <button type="button" class="main-btn" id="draw"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11h18a9 9 0 0 1-9 9 9 9 0 0 1-9-9z"/><path d="M8 7c0-1.5 1-2 1-3M12 7c0-1.5 1-2 1-3M16 7c0-1.5 1-2 1-3"/></svg> 吃啥</button>
